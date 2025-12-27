@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Robot SENSOR</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+        body {
+            background: black;
+            color: lime;
+            font-family: monospace;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        #val {
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body>
+<h1>SENSOR ACTIVE</h1>
+<div id="val">0</div>
+<p>Mount phone flat on robot.</p>
+<button onclick="requestPerms()">Start Sensors</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    const socket = io();
+    const disp = document.getElementById('val');
+
+    // Prevent screen sleep
+    async function wakeLock() {
+        try {
+            await navigator.wakeLock.request('screen');
+        } catch (err) {
+        }
+    }
+
+    wakeLock();
+
+    function handleOrientation(event) {
+        // Alpha is usually the compass heading (0-360)
+        // Note: On Android Chrome, this is absolute compass heading
+        let heading = event.alpha;
+
+        // Offset logic (Optional: tap button to set "Forward")
+        // For now, raw output:
+        if (heading !== null) {
+            disp.innerText = Math.round(heading);
+            socket.emit('sensor_data', {heading: heading});
+        }
+    }
+
+    function requestPerms() {
+        // iOS requires explicit permission, Android usually just works on HTTPS
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response == 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    }
+                })
+                .catch(console.error);
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Robot Pilot</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            overflow: hidden;
+        }
+
+        #left-zone, #right-zone {
+            position: absolute;
+            bottom: 0;
+            width: 50%;
+            height: 50vh;
+        }
+
+        #left-zone {
+            left: 0;
+            border-right: 1px solid #444;
+        }
+
+        #right-zone {
+            right: 0;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+<h1>PILOT MODE</h1>
+<div id="left-zone"></div>
+<div id="right-zone"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+<script>
+    const socket = io();
+    let move = {x: 0, y: 0};
+    let turn = 0;
+
+    // Left Stick (Movement)
+    const leftManager = nipplejs.create({
+        zone: document.getElementById('left-zone'),
+        mode: 'static', position: {left: '50%', top: '50%'}, color: 'cyan'
+    });
+
+    // Right Stick (Rotation)
+    const rightManager = nipplejs.create({
+        zone: document.getElementById('right-zone'),
+        mode: 'static', position: {left: '50%', top: '50%'}, color: 'red',
+        lockX: true // Only allow left/right movement for turning
+    });
+
+    leftManager.on('move', (evt, data) => {
+        move.x = data.vector.x;
+        move.y = data.vector.y;
+        sendData();
+    });
+
+    leftManager.on('end', () => {
+        move.x = 0;
+        move.y = 0;
+        sendData();
+    });
+
+    rightManager.on('move', (evt, data) => {
+        turn = data.vector.x;
+        sendData();
+    });
+
+    rightManager.on('end', () => {
+        turn = 0;
+        sendData();
+    });
+
+    function sendData() {
+        // Send data to Pi
+        socket.emit('joystick_data', {lx: move.x, ly: move.y, rx: turn});
+    }
+</script>
+</body>
+</html>

@@ -1,87 +1,101 @@
 // --- PARAMETERS ---
-// Your printer bed size limit (safeguard)
 bed_size = 200;
-$fn = 90;
+$fn = 60;
 
 // Chassis Dimensions
-wheelbase = 130;  // Distance between wheel centers (side to side & front to back)
-arm_width = 35;   // Width of the X arms
-thickness = 3;    // Thickness of the main plate
-fillet_radius = 20; // Radius of the curve between arms (Strength!)
+wheelbase = 130;  
+arm_width = 38;   // Slightly wider to accommodate the hole grid
+thickness = 3;    
+fillet_radius = 25; // Bigger fillets for the "organic/tech" look
 
 // Motor Mount Details
-// Slots allow for "guessing" the bracket hole spacing
-slot_width = 3.2; // Fits M3 screws loose
-slot_length = 25;
-slot_separation = 18; // Distance between the two parallel slots
+slot_width = 3.0; 
+slot_length = 20;
+slot_separation = 12; 
 
-// Raspberry Pi Zero W Mounting (Standard Dimensions)
-pi_w = 23;        // Hole spacing short side
-pi_l = 58;        // Hole spacing long side
-pi_hole_dia = 2.6;// M2.5 screws
+// Raspberry Pi Zero Mounting
+pi_w = 23;        
+pi_l = 58;        
+pi_hole_dia = 2.6; 
 
-// Zip Tie Slots for wire management
-zip_w = 4;
-zip_l = 10;
+// Grid System Parameters
+grid_spacing = 10; // Standard 10mm spacing
+m3_hole = 3.0;     // Loose fit for M3 screws
 
 // --- MAIN RENDER ---
 
-// We build the entire 2D profile first, then extrude it once
 linear_extrude(height = thickness) {
     difference() {
         
-        // 1. THE POSITIVE SHAPE (With Fillets)
-        // The offset(r=-x) offset(r=x) technique rounds internal corners
+        // 1. POSITIVE SHAPE (The Body)
         offset(r = -fillet_radius) offset(r = fillet_radius)
         union() {
+            // Central Hub
+            circle(r=30);
+            
+            // The Arms
             for(i = [45, 135, 225, 315]) {
+                rotate([0, 0, i])
                 hull() {
-                    circle(r=25); // Center Hub
-                    rotate([0, 0, i])
-                    translate([wheelbase/sqrt(2), 0])
-                    circle(r=arm_width/2); // Arm End
+                    translate([10,0]) circle(r=arm_width/2); // Blend into hub
+                    translate([wheelbase/sqrt(2), 0]) circle(r=arm_width/2);
                 }
             }
         }
 
-        // 2. THE NEGATIVE SHAPES (Holes)
+        // 2. NEGATIVE SHAPES (The Cutouts)
         
-        // Pi Zero Mounting Holes
+        // --- A. Raspberry Pi Zero Mount ---
         for (x_sign = [-1, 1], y_sign = [-1, 1]) {
              translate([x_sign*pi_l/2, y_sign*pi_w/2]) circle(d=pi_hole_dia);
-             // Also adding the "Rotate 90" variant from your original code just in case
-             translate([x_sign*pi_w/2, y_sign*pi_l/2]) circle(d=pi_hole_dia);
+             translate([x_sign*pi_w/2, y_sign*pi_l/2]) circle(d=pi_hole_dia); // Rotated option
+        }
+        
+        // Center Wire Pass-through
+        circle(r=10);
+
+        // --- B. The "Reactor" Battery Strap Slots ---
+        // Large slots near the center for velcro straps (holding the battery bank)
+        for(i = [0, 90, 180, 270], dist=[28, 20]) {
+            rotate([0, 0, i])
+            translate([dist, 0])
+            hull() {
+                translate([0, 4]) circle(d=4);
+                translate([0, -4]) circle(d=4);
+            }
         }
 
-        // Center Wire Cutout
-        circle(r=8);
-
-        // Motor Mounting Slots
+        // --- C. Motor Slots (Critical) ---
         for(i = [45, 135, 225, 315]) {
             rotate([0, 0, i])
-            translate([wheelbase/sqrt(2) - 5, 0]) {
-                // Slot 1
+            translate([wheelbase/sqrt(2) - 0, 0]) {
+                rotate([0,0,-i]) {
                 translate([-slot_length/2, slot_separation/2])
-                hull() {
-                    circle(d=slot_width);
-                    translate([slot_length, 0]) circle(d=slot_width);
-                }
-                // Slot 2
+                # hull() { circle(d=slot_width); translate([slot_length, 0]) circle(d=slot_width); }
+                
                 translate([-slot_length/2, -slot_separation/2])
-                hull() {
-                    circle(d=slot_width);
-                    translate([slot_length, 0]) circle(d=slot_width);
+                # hull() { circle(d=slot_width); translate([slot_length, 0]) circle(d=slot_width); }
                 }
             }
         }
 
-        // Zip Tie Slots
+        // --- D. The "Future-Proof" Grid (M3 Holes & Lightening Slots) ---
         for(i = [45, 135, 225, 315]) {
-            rotate([0, 0, i])
-            translate([40, 0]) {
-                hull() {
-                    translate([0, 5]) circle(d=zip_w);
-                    translate([0, -5]) circle(d=zip_w);
+            rotate([0, 0, i]) {
+                // We run a loop starting from outside the hub up to the motor mounts
+                for (dist = [40 : grid_spacing : wheelbase/sqrt(2) - 20]) {
+                    
+                    // 1. The "Side Rails" - M3 Mounting Grid
+                    translate([dist, 12]) circle(d=m3_hole);
+                    translate([dist, -12]) circle(d=m3_hole);
+                    
+                    // 2. The "Truss" - Central Lightening/Zip-tie Slots
+                    // We make these slightly staggered or continuous for a "Tech" look
+                    translate([dist, 0])
+                    hull() {
+                        translate([-2, 0]) circle(d=3); // Oval shape
+                        translate([2, 0]) circle(d=3);
+                    }
                 }
             }
         }

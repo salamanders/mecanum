@@ -23,7 +23,7 @@
 <p>Mount phone flat on robot.</p>
 <button onclick="requestPerms()">Start Sensors</button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
 <script>
     const socket = io();
     const disp = document.getElementById('val');
@@ -46,7 +46,7 @@
         // Offset logic (Optional: tap button to set "Forward")
         // For now, raw output:
         if (heading !== null) {
-            disp.innerText = Math.round(heading);
+            disp.innerText = String(Math.round(heading));
             socket.emit('sensor_data', {heading: heading});
         }
     }
@@ -56,7 +56,7 @@
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
-                    if (response == 'granted') {
+                    if (response === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientation);
                     }
                 })

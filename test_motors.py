@@ -1,24 +1,27 @@
 import time
-from adafruit_motorkit import MotorKit
+from motor_driver import MotorDriver
 
-kit = MotorKit()
+# Initialize the driver (will mock if no hardware)
+driver = MotorDriver()
 
 print("Testing M1 (Front Left) - Forward")
-kit.motor1.throttle = 0.5
+# Drive M1 full speed, others 0
+driver.drive(0.5, 0, 0, 0)
 time.sleep(1)
-kit.motor1.throttle = 0
+# Stop
+driver.drive(0, 0, 0, 0)
 
 print("Testing M2 (Front Right) - Forward")
-kit.motor2.throttle = 0.5
+driver.drive(0, 0.5, 0, 0)
 time.sleep(1)
-kit.motor2.throttle = 0
+driver.drive(0, 0, 0, 0)
 
 print("Testing M3 (Back Left) - Forward")
-kit.motor3.throttle = 0.5
+driver.drive(0, 0, 0.5, 0)
 time.sleep(1)
-kit.motor3.throttle = 0
+driver.drive(0, 0, 0, 0)
 
 print("Testing M4 (Back Right) - Forward")
-kit.motor4.throttle = 0.5
+driver.drive(0, 0, 0, 0.5)
 time.sleep(1)
-kit.motor4.throttle = 0
+driver.drive(0, 0, 0, 0)

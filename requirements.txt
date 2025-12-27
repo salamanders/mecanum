@@ -1,0 +1,6 @@
+flask
+flask-socketio
+eventlet
+adafruit-circuitpython-motorkit
+numpy
+pyopenssl

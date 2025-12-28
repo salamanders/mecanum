@@ -13,7 +13,6 @@ dependencies = [
     "flask-socketio",
     "eventlet",
     "adafruit-circuitpython-motorkit",
-    "numpy",
     "pyopenssl"
 ]
 

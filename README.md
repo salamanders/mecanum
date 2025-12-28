@@ -17,10 +17,11 @@
 
 ### System Dependencies (Raspberry Pi)
 
-For `numpy` and hardware access on Raspberry Pi:
+For hardware access on Raspberry Pi:
 
 ```bash
 sudo raspi-config nonint do_i2c 0
+sudo apt-get install libffi-dev
 ```
 
 ### Installation

@@ -21,7 +21,6 @@ For `numpy` and hardware access on Raspberry Pi:
 
 ```bash
 sudo raspi-config nonint do_i2c 0
-sudo apt-get install libatlas-base-dev
 ```
 
 ### Installation
@@ -30,6 +29,10 @@ sudo apt-get install libatlas-base-dev
 2. Install Python dependencies:
 
 ```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
 make install
 ```
 

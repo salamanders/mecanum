@@ -1,10 +1,10 @@
 // --- PARAMETERS ---
 bed_size = 200;
-$fn = 60;
+$fn = 90;
 
 // Chassis Dimensions
 wheelbase = 130;  
-arm_width = 38;   // Slightly wider to accommodate the hole grid
+arm_width = 34;   // Slightly wider to accommodate the hole grid
 thickness = 3;    
 fillet_radius = 25; // Bigger fillets for the "organic/tech" look
 
@@ -20,7 +20,7 @@ pi_hole_dia = 2.6;
 
 // Grid System Parameters
 grid_spacing = 10; // Standard 10mm spacing
-m3_hole = 3.0;     // Loose fit for M3 screws
+m3_hole = 2.9;     // Loose fit for M3 screws
 
 // --- MAIN RENDER ---
 
@@ -31,7 +31,7 @@ linear_extrude(height = thickness) {
         offset(r = -fillet_radius) offset(r = fillet_radius)
         union() {
             // Central Hub
-            circle(r=30);
+            circle(r=35);
             
             // The Arms
             for(i = [45, 135, 225, 315]) {
@@ -52,7 +52,7 @@ linear_extrude(height = thickness) {
         }
         
         // Center Wire Pass-through
-        circle(r=10);
+        circle(r=12);
 
         // --- B. The "Reactor" Battery Strap Slots ---
         // Large slots near the center for velcro straps (holding the battery bank)
@@ -60,8 +60,8 @@ linear_extrude(height = thickness) {
             rotate([0, 0, i])
             translate([dist, 0])
             hull() {
-                translate([0, 4]) circle(d=4);
-                translate([0, -4]) circle(d=4);
+                translate([0, 5]) circle(d=4);
+                translate([0, -5]) circle(d=4);
             }
         }
 
@@ -83,10 +83,12 @@ linear_extrude(height = thickness) {
         for(i = [45, 135, 225, 315]) {
             rotate([0, 0, i]) {
                 // We run a loop starting from outside the hub up to the motor mounts
-                for (dist = [40 : grid_spacing : wheelbase/sqrt(2) - 20]) {
+                for (dist = [34 : grid_spacing : wheelbase/sqrt(2) - 12]) {
                     
                     // 1. The "Side Rails" - M3 Mounting Grid
                     translate([dist, 12]) circle(d=m3_hole);
+                    translate([dist, 6]) circle(d=m3_hole);
+                    translate([dist, -6]) circle(d=m3_hole);
                     translate([dist, -12]) circle(d=m3_hole);
                     
                     // 2. The "Truss" - Central Lightening/Zip-tie Slots

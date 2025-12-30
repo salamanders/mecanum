@@ -56,6 +56,12 @@ Then visit `https://<ROBOT_IP>:5000/controller` on your phone.
 If you run this project on a machine without the Motor Bonnet (e.g., your laptop), it will automatically fallback to **Mock Mode**.
 In Mock Mode, motor commands are printed to the console instead of trying to talk to I2C hardware.
 
+### Self signed to support websockets
+
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+```
+
 ### Testing
 
 To test motor mappings (or check Mock output):

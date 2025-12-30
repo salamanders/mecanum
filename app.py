@@ -79,4 +79,5 @@ def handle_joystick(data):
 if __name__ == '__main__':
     # Host 0.0.0.0 makes it accessible on the LAN
     # SSL context is 'adhoc' to generate a quick self-signed cert for HTTPS
-    socketio.run(app, host='0.0.0.0', port=5000, ssl_context='adhoc')
+    # socketio.run(app, host='0.0.0.0', port=5000, ssl_context='adhoc')
+    socketio.run(app, host='0.0.0.0', port=5000, certfile='cert.pem', keyfile='key.pem')

@@ -3,6 +3,7 @@ try:
 except ImportError:
     MotorKit = None
 
+
 class MotorDriver:
     def __init__(self):
         self.mock = False
@@ -14,7 +15,9 @@ class MotorDriver:
                 self.kit = MotorKit()
                 print("Adafruit Motor Bonnet Connected!")
             except ValueError:
-                print("ERROR: Motor Bonnet not found. Check I2C is enabled and battery is connected!")
+                print(
+                    "ERROR: Motor Bonnet not found. Check I2C is enabled and battery is connected!"
+                )
                 print("Falling back to MOCK mode.")
                 self.mock = True
             except Exception as e:

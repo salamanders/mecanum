@@ -1,6 +1,8 @@
+import_error = None
 try:
     from adafruit_motorkit import MotorKit
-except ImportError:
+except ImportError as e:
+    import_error = e
     MotorKit = None
 
 
@@ -25,7 +27,7 @@ class MotorDriver:
                 print("Falling back to MOCK mode.")
                 self.mock = True
         else:
-            print("adafruit-circuitpython-motorkit not installed.")
+            print(f"adafruit-circuitpython-motorkit import failed: {import_error}")
             print("Falling back to MOCK mode.")
             self.mock = True
 

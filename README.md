@@ -16,7 +16,7 @@
     * USB Battery pack
     * USB PD (Power Delivery) Decoy Trigger (set to 9V)
     * IMU (optional) or Android Phone (Pixel 4 etc.) for compass
-    * Some sort of frame: model included <br/> ![model](parts/frame.png)
+    * Some sort of frame: model included <br/> ![model](printed_parts/frame.png)
 
 ### System Dependencies (Raspberry Pi)
 

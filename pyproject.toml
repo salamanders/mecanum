@@ -18,3 +18,14 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/yourusername/robot-twin-stick"
+
+[tool.setuptools]
+# By default, setuptools scans for any directories with __init__.py or just general directories
+# in flat layouts. We explicitly exclude the non-code directories to avoid build errors.
+exclude-package-data = { "*" = ["templates", "printed_parts"] }
+
+[tool.setuptools.packages.find]
+# "flat-layout" is the default for root-level modules, but we can clarify exclusions here too
+where = ["."]
+include = ["*"]
+exclude = ["templates*", "printed_parts*"]

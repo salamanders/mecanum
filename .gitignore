@@ -569,3 +569,4 @@ marimo/_lsp/
 __marimo__/
 
 cert.pem
+key.pem

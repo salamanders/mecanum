@@ -82,7 +82,20 @@ make test
 
 ## Files
 
-* `app.py`: Main Flask application and SocketIO logic.
-* `wiring_check.py` Verify you have everything plugged in the right way.
-* `motor_driver.py`: Motor driver class (handles Hardware or Mock).
-* `Makefile`: Shortcuts for common commands.
+### Backend & Hardware
+* `app.py`: Main Flask application. Handles SocketIO communication, robot state management, and HTTPS certificate generation.
+* `motor_driver.py`: Hardware abstraction layer. Handles `adafruit-circuitpython-motorkit` interaction and automatic Mock fallback.
+* `wiring_check.py`: Utility script to verify motor wiring interactively.
+
+### Frontend
+* `templates/`
+    * `controller.html`: The Twin-Stick Joystick UI structure.
+    * `sensor.html`: The Sensor Client UI structure (for transmitting phone compass/accelerometer data).
+* `static/js/`
+    * `common.js`: Shared logic for SocketIO connection and UI status updates.
+    * `controller.js`: Handles Nipple.js joystick input and transmission.
+    * `sensor.js`: Handles DeviceOrientation/Motion events and permission requests (iOS support).
+
+### Configuration
+* `Makefile`: Shortcuts for common commands (`install`, `run`, `test`, `lint`).
+* `pyproject.toml`: Python dependency management and project configuration.

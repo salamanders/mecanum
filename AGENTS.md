@@ -26,31 +26,7 @@ fi
 
 uv self update
 
-# 3. Generate certificates only if they don't exist
-if [[ ! -f "cert.pem" || ! -f "key.pem" ]]; then
-    echo "Generating certificates..."
-    openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365 -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
-else
-    echo "Certificates already exist."
-fi
-
-# 4. Install playwright python package only if not found by uv
-if ! uv pip show playwright >/dev/null 2>&1; then
-    echo "Installing Playwright package..."
-    uv pip install playwright
-fi
-
-# 5. Install Chromium browsers only if the directory is empty/missing
-# Playwright installs to ~/.cache/ms-playwright by default. 
-# We look for a chromium folder specifically.
-if ! find ~/.cache/ms-playwright -type d -name "chromium-*" -quit 2>/dev/null; then
-    echo "Installing Chromium..."
-    uv run playwright install chromium
-else
-    echo "Chromium is already installed."
-fi
-
-# 6. Run the verification script
-echo "Running verification..."
-uv run python3 verification/verify_controller.py
+# 3. Install Python dependencies
+echo "Installing project dependencies..."
+uv sync
 ```

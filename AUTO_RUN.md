@@ -31,6 +31,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+# Update to your username from "whoami"
 User=pi
 # Replace /home/pi/mecanum with the path you copied in Step 1 (where you cloned the github repo)
 WorkingDirectory=/home/pi/mecanum

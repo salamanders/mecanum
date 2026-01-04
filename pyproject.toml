@@ -13,7 +13,9 @@ dependencies = [
     "flask-socketio",
     "eventlet",
     "adafruit-circuitpython-motorkit",
-    "pyopenssl"
+    "pyopenssl",
+    "RPi.GPIO",
+    "adafruit-blinka"
 ]
 
 [project.urls]

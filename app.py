@@ -1,6 +1,7 @@
 import math
+import socket
 from flask import Flask, render_template
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 from motor_driver import MotorDriver
 
 
@@ -12,7 +13,23 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # --- GLOBAL STATE ---
 # Stores the robot's current compass heading from the Pixel 4
 robot_heading = 0.0
+# Stores the robot's linear acceleration (x, y, z)
+robot_accel = {"x": 0.0, "y": 0.0, "z": 0.0}
 motors = MotorDriver()
+
+
+def get_ip_address():
+    """Finds the local IP address of the device."""
+    try:
+        # Connect to a public DNS server (doesn't actually send data)
+        # to determine the outgoing interface IP.
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
 
 
 # --- ROUTES ---
@@ -29,12 +46,34 @@ def sensor():
 # --- WEBSOCKET LISTENERS ---
 
 
+@socketio.on("connect")
+def handle_connect():
+    """Sent when a client connects."""
+    ip = get_ip_address()
+    controller_url = f"https://{ip}:5000/controller"
+    # Send robot info back to the client
+    # We broadcast or emit to the specific client. Here we just emit to the sender.
+    emit(
+        "robot_info",
+        {
+            "controller_url": controller_url,
+            "battery_level": None,  # Placeholder for future battery hardware
+        },
+    )
+
+
 @socketio.on("sensor_data")
 def handle_sensor(data):
-    global robot_heading
+    global robot_heading, robot_accel
     # Get heading (0-360) from Pixel 4
     # Note: Android 'alpha' is 0=North, increasing counter-clockwise usually
     robot_heading = float(data.get("heading", 0))
+
+    # Get acceleration (linear, excluding gravity)
+    accel = data.get("accel", {})
+    robot_accel["x"] = float(accel.get("x", 0))
+    robot_accel["y"] = float(accel.get("y", 0))
+    robot_accel["z"] = float(accel.get("z", 0))
 
 
 @socketio.on("joystick_data")
@@ -83,4 +122,5 @@ if __name__ == "__main__":
     # Host 0.0.0.0 makes it accessible on the LAN
     # SSL context is 'adhoc' to generate a quick self-signed cert for HTTPS
     # socketio.run(app, host='0.0.0.0', port=5000, ssl_context='adhoc')
+    # Eventlet (used by flask_socketio) requires certfile/keyfile args, not ssl_context
     socketio.run(app, host="0.0.0.0", port=5000, certfile="cert.pem", keyfile="key.pem")

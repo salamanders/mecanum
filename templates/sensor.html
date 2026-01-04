@@ -9,11 +9,30 @@
             color: lime;
             font-family: monospace;
             text-align: center;
-            padding-top: 50px;
+            padding-top: 20px;
         }
 
         #val {
             font-size: 3em;
+        }
+
+        #accel-data {
+            font-size: 1.2em;
+            margin-top: 20px;
+            color: cyan;
+        }
+
+        #controller-link {
+            margin-top: 30px;
+            font-size: 1.2em;
+            border: 1px solid #444;
+            padding: 10px;
+            display: inline-block;
+        }
+
+        #controller-link a {
+            color: yellow;
+            text-decoration: none;
         }
 
         #status {
@@ -27,6 +46,10 @@
 <body>
 <h1>SENSOR ACTIVE</h1>
 <div id="val">0</div>
+<div id="accel-data">X: 0.0<br>Y: 0.0<br>Z: 0.0</div>
+
+<div id="controller-link">Waiting for Robot...</div>
+
 <div id="status">Ready</div>
 <p>Mount phone flat on robot.</p>
 <button onclick="requestPerms()">Start Sensors</button>
@@ -35,7 +58,12 @@
 <script>
     const socket = io();
     const disp = document.getElementById('val');
+    const accelDiv = document.getElementById('accel-data');
+    const linkDiv = document.getElementById('controller-link');
     const statusDiv = document.getElementById('status');
+
+    let currentHeading = 0;
+    let currentAccel = {x: 0, y: 0, z: 0};
 
     function updateStatus(msg, level = 'info') {
         statusDiv.innerText = msg;
@@ -47,7 +75,6 @@
             console.warn(msg);
         } else if (level === 'debug') {
              console.debug(msg);
-             // Don't necessarily change UI color for debug, or keep it neutral
         } else {
             statusDiv.style.color = 'lime';
             console.info(msg);
@@ -67,6 +94,17 @@
         updateStatus('Socket error: ' + err.message, 'error');
     });
 
+    socket.on('robot_info', (data) => {
+        console.log('Received robot_info:', data);
+        if (data.controller_url) {
+            linkDiv.innerHTML = `Controller URL:<br><a href="${data.controller_url}" target="_blank">${data.controller_url}</a>`;
+        }
+        if (data.battery_level !== null) {
+            // Update battery UI if we add it later
+            console.log("Battery Level: " + data.battery_level);
+        }
+    });
+
     // Prevent screen sleep
     async function wakeLock() {
         if (!('wakeLock' in navigator)) {
@@ -83,16 +121,47 @@
 
     wakeLock();
 
+    function sendData() {
+        socket.emit('sensor_data', {
+            heading: currentHeading,
+            accel: currentAccel
+        });
+    }
+
     function handleOrientation(event) {
         // Alpha is usually the compass heading (0-360)
-        // Note: On Android Chrome, this is absolute compass heading
         let heading = event.alpha;
-
-        // Offset logic (Optional: tap button to set "Forward")
-        // For now, raw output:
         if (heading !== null) {
+            currentHeading = heading;
             disp.innerText = String(Math.round(heading));
-            socket.emit('sensor_data', {heading: heading});
+            sendData();
+        }
+    }
+
+    function handleMotion(event) {
+        // Linear acceleration (excluding gravity)
+        let acc = event.acceleration;
+        if (acc) {
+            currentAccel = {
+                x: acc.x || 0,
+                y: acc.y || 0,
+                z: acc.z || 0
+            };
+            accelDiv.innerHTML = `X: ${currentAccel.x.toFixed(1)}<br>Y: ${currentAccel.y.toFixed(1)}<br>Z: ${currentAccel.z.toFixed(1)}`;
+            // We rely on handleOrientation to trigger sending, or we can send here too.
+            // Sending on both might double traffic, but orientation is usually the driver.
+            // Let's just update the state and let the next orientation event send it,
+            // or throttle it. For now, sending on orientation update (usually 60Hz) is fine.
+            // If orientation stops, we might miss accel updates?
+            // Actually, let's just send here too if we want high fidelity, or debounce.
+            // To keep it simple, I'll update global state and send.
+            // But to avoid double sending if both fire at 60Hz, maybe we should just send on one of them?
+            // Let's stick to sending on orientation for now as that's the primary sensor.
+            // Actually, if the robot is level and just accelerating, orientation might not change event.
+            // So we should send here too?
+            // Let's send on both but maybe throttle in `sendData` if needed.
+            // For this simple app, sending on both is probably okay (socketio handles some buffering).
+            sendData();
         }
     }
 
@@ -104,22 +173,43 @@
 
         console.debug('Requesting sensor permissions...');
 
+        // Helper to request Motion permission
+        const reqMotion = () => {
+             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                return DeviceMotionEvent.requestPermission();
+             }
+             return Promise.resolve('granted');
+        };
+
         // iOS requires explicit permission, Android usually just works on HTTPS
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Request Orientation
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
                     if (response === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientation);
-                        updateStatus('Permission granted');
+                        // Chain Motion request
+                        return reqMotion();
                     } else {
-                        updateStatus('Permission denied: ' + response, 'warn');
+                        throw new Error('Orientation Permission denied: ' + response);
+                    }
+                })
+                .then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('devicemotion', handleMotion);
+                        updateStatus('Permissions granted');
+                    } else {
+                         updateStatus('Motion Permission denied: ' + response, 'warn');
+                         // We still have orientation, so maybe that's okay?
                     }
                 })
                 .catch(err => {
                     updateStatus('Permission error: ' + err.message, 'error');
                 });
         } else {
+            // Non-iOS (Android/Desktop)
             window.addEventListener('deviceorientation', handleOrientation);
+            window.addEventListener('devicemotion', handleMotion);
             updateStatus('Sensors started (non-iOS)');
         }
     }

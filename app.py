@@ -1,5 +1,6 @@
 import math
-from flask import Flask, render_template
+import socket
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 from motor_driver import MotorDriver
 
@@ -12,7 +13,46 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # --- GLOBAL STATE ---
 # Stores the robot's current compass heading from the Pixel 4
 robot_heading = 0.0
+# Stores the robot's current acceleration (unused by motors, but logged/stored)
+robot_accel = {"ax": 0, "ay": 0, "az": 0}
+
 motors = MotorDriver()
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(("8.8.8.8", 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = "127.0.0.1"
+    finally:
+        s.close()
+    return IP
+
+
+def send_status_update(target_sid=None):
+    ip = get_local_ip()
+    # Construct the Controller URL
+    url = f"https://{ip}:5000/controller"
+
+    data = {
+        "url": url,
+        "battery": None,  # Placeholder for battery level
+    }
+
+    if target_sid:
+        socketio.emit("robot_status", data, room=target_sid)
+    else:
+        socketio.emit("robot_status", data)  # Broadcast
+
+
+def background_status_task():
+    """Background task to send status updates every 60 seconds."""
+    while True:
+        socketio.sleep(60)
+        send_status_update()
 
 
 # --- ROUTES ---
@@ -29,12 +69,23 @@ def sensor():
 # --- WEBSOCKET LISTENERS ---
 
 
+@socketio.on("connect")
+def handle_connect():
+    # Send status immediately upon connection
+    send_status_update(request.sid)
+
+
 @socketio.on("sensor_data")
 def handle_sensor(data):
-    global robot_heading
+    global robot_heading, robot_accel
     # Get heading (0-360) from Pixel 4
     # Note: Android 'alpha' is 0=North, increasing counter-clockwise usually
     robot_heading = float(data.get("heading", 0))
+
+    # Store acceleration data
+    robot_accel["ax"] = float(data.get("ax", 0))
+    robot_accel["ay"] = float(data.get("ay", 0))
+    robot_accel["az"] = float(data.get("az", 0))
 
 
 @socketio.on("joystick_data")
@@ -80,6 +131,9 @@ def handle_joystick(data):
 
 
 if __name__ == "__main__":
+    # Start background task
+    socketio.start_background_task(background_status_task)
+
     # Host 0.0.0.0 makes it accessible on the LAN
     # SSL context is 'adhoc' to generate a quick self-signed cert for HTTPS
     # socketio.run(app, host='0.0.0.0', port=5000, ssl_context='adhoc')

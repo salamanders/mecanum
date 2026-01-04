@@ -15,11 +15,19 @@
         #val {
             font-size: 3em;
         }
+
+        #status {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
+            min-height: 1.2em;
+        }
     </style>
 </head>
 <body>
 <h1>SENSOR ACTIVE</h1>
 <div id="val">0</div>
+<div id="status">Ready</div>
 <p>Mount phone flat on robot.</p>
 <button onclick="requestPerms()">Start Sensors</button>
 
@@ -27,12 +35,49 @@
 <script>
     const socket = io();
     const disp = document.getElementById('val');
+    const statusDiv = document.getElementById('status');
+
+    function updateStatus(msg, level = 'info') {
+        statusDiv.innerText = msg;
+        if (level === 'error') {
+            statusDiv.style.color = 'red';
+            console.error(msg);
+        } else if (level === 'warn') {
+            statusDiv.style.color = 'orange';
+            console.warn(msg);
+        } else if (level === 'debug') {
+             console.debug(msg);
+             // Don't necessarily change UI color for debug, or keep it neutral
+        } else {
+            statusDiv.style.color = 'lime';
+            console.info(msg);
+        }
+    }
+
+    // Socket.IO Events
+    socket.on('connect', () => {
+        updateStatus('Socket connected');
+    });
+
+    socket.on('disconnect', () => {
+        updateStatus('Socket disconnected', 'warn');
+    });
+
+    socket.on('connect_error', (err) => {
+        updateStatus('Socket error: ' + err.message, 'error');
+    });
 
     // Prevent screen sleep
     async function wakeLock() {
+        if (!('wakeLock' in navigator)) {
+            updateStatus('Wake Lock API not supported', 'warn');
+            return;
+        }
         try {
             await navigator.wakeLock.request('screen');
+            updateStatus('Wake Lock active');
         } catch (err) {
+            updateStatus('Wake Lock failed: ' + err.message, 'error');
         }
     }
 
@@ -52,17 +97,30 @@
     }
 
     function requestPerms() {
+        if (!window.DeviceOrientationEvent) {
+             updateStatus('DeviceOrientationEvent not supported', 'error');
+             return;
+        }
+
+        console.debug('Requesting sensor permissions...');
+
         // iOS requires explicit permission, Android usually just works on HTTPS
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
                     if (response === 'granted') {
                         window.addEventListener('deviceorientation', handleOrientation);
+                        updateStatus('Permission granted');
+                    } else {
+                        updateStatus('Permission denied: ' + response, 'warn');
                     }
                 })
-                .catch(console.error);
+                .catch(err => {
+                    updateStatus('Permission error: ' + err.message, 'error');
+                });
         } else {
             window.addEventListener('deviceorientation', handleOrientation);
+            updateStatus('Sensors started (non-iOS)');
         }
     }
 </script>

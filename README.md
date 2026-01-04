@@ -12,7 +12,7 @@
 * Hardware:
     * Raspberry Pi Zero 2 W with the default Raspbian
     * Motor Bonnet
-    * Mecanum wheels
+    * Mecanum wheels (4 total, 2 of each type)
     * USB Battery pack
     * USB PD (Power Delivery) Decoy Trigger (set to 9V)
     * IMU (optional) or Android Phone (Pixel 4 etc.) for compass
@@ -24,13 +24,9 @@ For hardware access on Raspberry Pi:
 
 ```bash
 sudo raspi-config nonint do_i2c 0
-sudo apt-get install libffi-dev
-# uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
-uv self update
-uv add ruff
 ```
+
+Then run the script in [AGENTS.md](AGENTS.md).
 
 ### Installation
 
@@ -66,12 +62,6 @@ To lint the code:
 make lint
 ```
 
-### Self-signed to support websockets
-
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
-```
-
 ### Testing
 
 To test motor mappings (or check Mock output):
@@ -85,10 +75,10 @@ make test
 * **Power**: Set USB PD Trigger to 9V.
 * **Layout**: Ensure Mecanum wheels form an 'X' pattern from the top.
 * **Wiring**:
-    * M1 (Front Left) -> Motor Terminal 1
-    * M2 (Front Right) -> Motor Terminal 2
-    * M3 (Back Left) -> Motor Terminal 3
-    * M4 (Back Right) -> Motor Terminal 4
+    * M1 (Front Left) → Motor Terminal 1
+    * M2 (Front Right) → Motor Terminal 2
+    * M3 (Back Left) → Motor Terminal 3
+    * M4 (Back Right) → Motor Terminal 4
 
 ## Files
 

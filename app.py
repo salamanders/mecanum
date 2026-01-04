@@ -1,5 +1,6 @@
 import math
 import socket
+import os
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from motor_driver import MotorDriver
@@ -118,7 +119,37 @@ def handle_joystick(data):
     motors.drive(front_left, front_right, back_left, back_right)
 
 
+def ensure_certificates():
+    """Generates self-signed certificate and key if they don't exist."""
+    if not os.path.exists("cert.pem") or not os.path.exists("key.pem"):
+        print("Generating self-signed certificate...")
+        from OpenSSL import crypto
+
+        k = crypto.PKey()
+        k.generate_key(crypto.TYPE_RSA, 2048)
+
+        cert = crypto.X509()
+        cert.get_subject().C = "US"
+        cert.get_subject().ST = "State"
+        cert.get_subject().L = "City"
+        cert.get_subject().O = "Robot"
+        cert.get_subject().CN = "robot.local"
+        cert.set_serial_number(1000)
+        cert.gmtime_adj_notBefore(0)
+        cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)
+        cert.set_issuer(cert.get_subject())
+        cert.set_pubkey(k)
+        cert.sign(k, "sha256")
+
+        with open("cert.pem", "wb") as f:
+            f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+        with open("key.pem", "wb") as f:
+            f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+        print("Certificates generated.")
+
+
 if __name__ == "__main__":
+    ensure_certificates()
     # Host 0.0.0.0 makes it accessible on the LAN
     # SSL context is 'adhoc' to generate a quick self-signed cert for HTTPS
     # socketio.run(app, host='0.0.0.0', port=5000, ssl_context='adhoc')

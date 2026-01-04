@@ -1,8 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-robot_twin_stick.egg-info/PKG-INFO
-robot_twin_stick.egg-info/SOURCES.txt
-robot_twin_stick.egg-info/dependency_links.txt
-robot_twin_stick.egg-info/requires.txt
-robot_twin_stick.egg-info/top_level.txt

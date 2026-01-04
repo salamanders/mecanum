@@ -1,7 +1,0 @@
-flask
-flask-socketio
-eventlet
-adafruit-circuitpython-motorkit
-pyopenssl
-RPi.GPIO
-adafruit-blinka

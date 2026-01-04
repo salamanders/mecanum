@@ -10,7 +10,7 @@
 
 * Python 3.7+
 * Hardware:
-    * Raspberry Pi Zero W (or similar)
+    * Raspberry Pi Zero 2 W with the default Raspbian
     * Motor Bonnet
     * Mecanum wheels
     * USB Battery pack
@@ -51,10 +51,20 @@ make run
 
 Then visit `https://zero.local:5000/controller` on your phone.
 
-### Development (Mock Mode)
+### Auto-Start Service
+
+To run the robot automatically on boot, see [AUTO_RUN.md](AUTO_RUN.md).
+
+### Development
 
 If you run this project on a machine without the Motor Bonnet (e.g., your laptop), it will automatically fallback to **Mock Mode**.
 In Mock Mode, motor commands are printed to the console instead of trying to talk to I2C hardware.
+
+To lint the code:
+
+```bash
+make lint
+```
 
 ### Self-signed to support websockets
 

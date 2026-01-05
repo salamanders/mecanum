@@ -55,7 +55,7 @@ def calculate_mecanum_speeds(
     """
     # 1. Field-Centric Math
     # Convert degrees to radians
-    theta = math.radians(heading_degrees)
+    theta = math.radians(-heading_degrees)
 
     # Rotate the vector
     # We counteract the robot's rotation to keep inputs "Field Aligned"

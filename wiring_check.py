@@ -1,10 +1,10 @@
-import time
-import sys
 from motor_driver import MotorDriver
+
 
 def prompt_user(message):
     print(f"\n>>> {message}")
     input("    Press Enter to continue...")
+
 
 def main():
     print("Initializing Motor Driver...")
@@ -13,26 +13,10 @@ def main():
     # Motor configurations: (ID, Position, Drive Args)
     # Drive Args format: (fl, fr, bl, br)
     motors = [
-        {
-            "id": "M1",
-            "pos": "Front-Left",
-            "args": (0.5, 0, 0, 0)
-        },
-        {
-            "id": "M2",
-            "pos": "Front-Right",
-            "args": (0, 0.5, 0, 0)
-        },
-        {
-            "id": "M3",
-            "pos": "Back-Left",
-            "args": (0, 0, 0.5, 0)
-        },
-        {
-            "id": "M4",
-            "pos": "Back-Right",
-            "args": (0, 0, 0, 0.5)
-        }
+        {"id": "M1", "pos": "Front-Left", "args": (0.5, 0, 0, 0)},
+        {"id": "M2", "pos": "Front-Right", "args": (0, 0.5, 0, 0)},
+        {"id": "M3", "pos": "Back-Left", "args": (0, 0, 0.5, 0)},
+        {"id": "M4", "pos": "Back-Right", "args": (0, 0, 0, 0.5)},
     ]
 
     print("==================================================")
@@ -48,22 +32,28 @@ def main():
             pos = motor["pos"]
             drive_args = motor["args"]
 
-            print(f"\n--------------------------------------------------")
+            print("\n--------------------------------------------------")
             print(f"STEP: Testing Motor {mid} ({pos})")
-            print(f"--------------------------------------------------")
+            print("--------------------------------------------------")
 
             # 1. Setup voltage check
-            prompt_user(f"Connect multimeter leads to terminal block {mid}.\n    (Ensure no wheel is connected if possible, or wheel is safely elevated)")
+            prompt_user(
+                f"Connect multimeter leads to terminal block {mid}.\n    (Ensure no wheel is connected if possible, or wheel is safely elevated)"
+            )
 
             print(f"    -> Powering {mid} at 50% throttle...")
             driver.drive(*drive_args)
 
             # 2. Verify voltage
-            prompt_user(f"Power is ON. Verify that at least +6V is present on pins {mid}.\n    (If voltage is negative, note that wires might be swapped, but check spin direction next)")
+            prompt_user(
+                f"Power is ON. Verify that at least +6V is present on pins {mid}.\n    (If voltage is negative, note that wires might be swapped, but check spin direction next)"
+            )
 
             # 3. Connect wheel / Verify Spin
-            print(f"    -> Keeping power ON...")
-            prompt_user(f"Now connect the {pos} wheel (if not connected).\n    It should be spinning FORWARD.\n    If it is spinning BACKWARD, swap the wires for this motor!")
+            print("    -> Keeping power ON...")
+            prompt_user(
+                f"Now connect the {pos} wheel (if not connected).\n    It should be spinning FORWARD.\n    If it is spinning BACKWARD, swap the wires for this motor!"
+            )
 
             # 4. Stop
             print(f"    -> Stopping {mid}...")
@@ -83,9 +73,10 @@ def main():
         # Ensure motors are stopped
         try:
             driver.drive(0, 0, 0, 0)
-        except:
+        except Exception:
             pass
         print("Motors stopped. Exiting.")
+
 
 if __name__ == "__main__":
     main()

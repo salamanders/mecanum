@@ -9,62 +9,61 @@
             color: lime;
             font-family: monospace;
             text-align: center;
-            padding-top: 50px;
+            padding-top: 20px;
         }
 
         #val {
             font-size: 3em;
         }
+
+        #accel {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: cyan;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
+            min-height: 1.2em;
+        }
+
+        #controller-link {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        #controller-link a {
+            color: yellow;
+            text-decoration: none;
+            border: 1px solid yellow;
+            padding: 10px;
+            display: inline-block;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
 <h1>SENSOR ACTIVE</h1>
+<div>Heading:</div>
 <div id="val">0</div>
+<div id="accel">Accel: 0.00, 0.00, 0.00</div>
+
+<div id="status">Ready</div>
+
+<div id="controller-link">
+    Waiting for Controller URL...
+</div>
+
 <p>Mount phone flat on robot.</p>
 <button onclick="requestPerms()">Start Sensors</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
-<script>
-    const socket = io();
-    const disp = document.getElementById('val');
 
-    // Prevent screen sleep
-    async function wakeLock() {
-        try {
-            await navigator.wakeLock.request('screen');
-        } catch (err) {
-        }
-    }
-
-    wakeLock();
-
-    function handleOrientation(event) {
-        // Alpha is usually the compass heading (0-360)
-        // Note: On Android Chrome, this is absolute compass heading
-        let heading = event.alpha;
-
-        // Offset logic (Optional: tap button to set "Forward")
-        // For now, raw output:
-        if (heading !== null) {
-            disp.innerText = String(Math.round(heading));
-            socket.emit('sensor_data', {heading: heading});
-        }
-    }
-
-    function requestPerms() {
-        // iOS requires explicit permission, Android usually just works on HTTPS
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation);
-                    }
-                })
-                .catch(console.error);
-        } else {
-            window.addEventListener('deviceorientation', handleOrientation);
-        }
-    }
-</script>
+<!-- Shared Logic -->
+<script src="/static/js/common.js"></script>
+<!-- Sensor Specific Logic -->
+<script src="/static/js/sensor.js"></script>
 </body>
 </html>

@@ -7,8 +7,10 @@ You need to know exactly where your code lives.
 
 1. SSH into your Pi.
 2. Navigate to your robot folder: `cd mecanum` (or whatever you named it).
-3. Type `pwd` and copy the output. (e.g., `/home/pi/mecanum`)
-4. Type `whoami` to confirm your username. (e.g., `pi` or `admin`)
+3. Run `make install` to ensure all dependencies are installed.
+4. Type `pwd` and copy the output. (e.g., `/home/pi/mecanum`)
+5. Type `whoami` to confirm your username. (e.g., `pi` or `admin`)
+6. Type `which uv` to get the path to uv. (e.g. `/home/pi/.local/bin/uv`)
 
 ### Step 2: Create the Service File
 
@@ -29,10 +31,12 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+# Update to your username from "whoami"
 User=pi
+# Replace /home/pi/mecanum with the path you copied in Step 1 (where you cloned the github repo)
 WorkingDirectory=/home/pi/mecanum
-# Assuming you installed libraries globally. If you used a venv, use /home/pi/mecanum/venv/bin/python
-ExecStart=/usr/bin/python3 app.py
+# We use uv to run the app. Replace /home/pi/.local/bin/uv with the result of `which uv` from Step 1.
+ExecStart=/home/pi/.local/bin/uv run python3 app.py
 
 # Auto-restart if it crashes (e.g. WiFi blip)
 Restart=always

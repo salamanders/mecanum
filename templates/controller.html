@@ -40,50 +40,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.2/nipplejs.min.js"></script>
-<script>
-    const socket = io();
-    let move = {x: 0, y: 0};
-    let turn = 0;
 
-    // Left Stick (Movement)
-    const leftManager = nipplejs.create({
-        zone: document.getElementById('left-zone'),
-        mode: 'static', position: {left: '50%', top: '50%'}, color: 'cyan'
-    });
-
-    // Right Stick (Rotation)
-    const rightManager = nipplejs.create({
-        zone: document.getElementById('right-zone'),
-        mode: 'static', position: {left: '50%', top: '50%'}, color: 'red',
-        lockX: true // Only allow left/right movement for turning
-    });
-
-    leftManager.on('move', (evt, data) => {
-        move.x = data.vector.x;
-        move.y = data.vector.y;
-        sendData();
-    });
-
-    leftManager.on('end', () => {
-        move.x = 0;
-        move.y = 0;
-        sendData();
-    });
-
-    rightManager.on('move', (evt, data) => {
-        turn = data.vector.x;
-        sendData();
-    });
-
-    rightManager.on('end', () => {
-        turn = 0;
-        sendData();
-    });
-
-    function sendData() {
-        // Send data to Pi
-        socket.emit('joystick_data', {lx: move.x, ly: move.y, rx: turn});
-    }
-</script>
+<!-- Shared Logic -->
+<script src="/static/js/common.js"></script>
+<!-- Controller Specific Logic -->
+<script src="/static/js/controller.js"></script>
 </body>
 </html>

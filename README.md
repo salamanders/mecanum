@@ -10,13 +10,13 @@
 
 * Python 3.7+
 * Hardware:
-    * Raspberry Pi Zero W (or similar)
+    * Raspberry Pi Zero 2 W with the default Raspbian
     * Motor Bonnet
-    * Mecanum wheels
+    * Mecanum wheels (4 total, 2 of each type)
     * USB Battery pack
     * USB PD (Power Delivery) Decoy Trigger (set to 9V)
     * IMU (optional) or Android Phone (Pixel 4 etc.) for compass
-    * Some sort of frame: model included <br/> ![model](parts/frame.png)
+    * Some sort of frame: model included <br/> ![model](printed_parts/frame.png)
 
 ### System Dependencies (Raspberry Pi)
 
@@ -24,13 +24,9 @@ For hardware access on Raspberry Pi:
 
 ```bash
 sudo raspi-config nonint do_i2c 0
-sudo apt-get install libffi-dev
-# uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.local/bin/env
-uv self update
-uv add ruff
 ```
+
+Then run the script in [AGENTS.md](AGENTS.md).
 
 ### Installation
 
@@ -51,15 +47,19 @@ make run
 
 Then visit `https://zero.local:5000/controller` on your phone.
 
-### Development (Mock Mode)
+### Auto-Start Service
+
+To run the robot automatically on boot, see [AUTO_RUN.md](AUTO_RUN.md).
+
+### Development
 
 If you run this project on a machine without the Motor Bonnet (e.g., your laptop), it will automatically fallback to **Mock Mode**.
 In Mock Mode, motor commands are printed to the console instead of trying to talk to I2C hardware.
 
-### Self-signed to support websockets
+To lint the code:
 
 ```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+make lint
 ```
 
 ### Testing
@@ -75,14 +75,27 @@ make test
 * **Power**: Set USB PD Trigger to 9V.
 * **Layout**: Ensure Mecanum wheels form an 'X' pattern from the top.
 * **Wiring**:
-    * M1 (Front Left) -> Motor Terminal 1
-    * M2 (Front Right) -> Motor Terminal 2
-    * M3 (Back Left) -> Motor Terminal 3
-    * M4 (Back Right) -> Motor Terminal 4
+    * M1 (Front Left) → Motor Terminal 1
+    * M2 (Front Right) → Motor Terminal 2
+    * M3 (Back Left) → Motor Terminal 3
+    * M4 (Back Right) → Motor Terminal 4
 
 ## Files
 
-* `app.py`: Main Flask application and SocketIO logic.
-* `wiring_check.py` Verify you have everything plugged in the right way.
-* `motor_driver.py`: Motor driver class (handles Hardware or Mock).
-* `Makefile`: Shortcuts for common commands.
+### Backend & Hardware
+* `app.py`: Main Flask application. Handles SocketIO communication, robot state management, and HTTPS certificate generation.
+* `motor_driver.py`: Hardware abstraction layer. Handles `adafruit-circuitpython-motorkit` interaction and automatic Mock fallback.
+* `wiring_check.py`: Utility script to verify motor wiring interactively.
+
+### Frontend
+* `templates/`
+    * `controller.html`: The Twin-Stick Joystick UI structure.
+    * `sensor.html`: The Sensor Client UI structure (for transmitting phone compass/accelerometer data).
+* `static/js/`
+    * `common.js`: Shared logic for SocketIO connection and UI status updates.
+    * `controller.js`: Handles Nipple.js joystick input and transmission.
+    * `sensor.js`: Handles DeviceOrientation/Motion events and permission requests (iOS support).
+
+### Configuration
+* `Makefile`: Shortcuts for common commands (`install`, `run`, `test`, `lint`).
+* `pyproject.toml`: Python dependency management and project configuration.

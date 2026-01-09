@@ -23,7 +23,7 @@ grid_spacing = 10; // Standard 10mm spacing
 m3_hole = 2.9;     // Loose fit for M3 screws
 
 // --- MAIN RENDER ---
-
+/*
 linear_extrude(height = thickness) {
     difference() {
         
@@ -102,4 +102,80 @@ linear_extrude(height = thickness) {
             }
         }
     }
+}
+*/
+
+module breadboard(len, pegs=false) {
+    linear_extrude(height = thickness/2) {
+    difference() {
+        hull() {
+           for(x=[0,grid_spacing*len-2], y=[-arm_width/2, arm_width/2]) {
+                translate([x,y]) circle(r=3);
+            }
+        }
+                    
+        for (dist = [grid_spacing/2 : grid_spacing : grid_spacing*len]) {
+            
+            // 1. The "Side Rails" - M3 Mounting Grid
+            for(hole_y = [-12,-6,6,12]) {
+                translate([dist, hole_y]) circle(d=m3_hole-0.1);
+            }
+            translate([dist, 0])
+            hull() {
+                translate([-2, 0]) circle(d=3); // Oval shape
+                translate([2, 0]) circle(d=3);
+            }
+        }
+    }
+    }
+    if(pegs) {
+        color("green")
+        translate([0,0,-thickness])
+        linear_extrude(height = thickness * 1.5) {
+        
+            for (dist = [grid_spacing/2 : grid_spacing : grid_spacing*len]) {
+                
+                for(hole_y = [-12,-6,6,12]) {
+                    translate([dist, hole_y]) circle(d=m3_hole-0.1);
+                }
+            }
+        }
+    }
+}
+
+// https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids#polyhedron
+module prism(l, w, h) {
+    polyhedron(// pt      0        1        2        3        4        5
+               points=[[0,0,0], [0,w,h], [l,w,h], [l,0,0], [0,w,0], [l,w,0]],
+               // top sloping face (A)
+               faces=[[0,1,2,3],
+               // vertical rectangular face (B)
+               [2,1,4,5],
+               // bottom face (C)
+               [0,3,5,4],
+               // rear triangular face (D)
+               [0,4,1],
+               // front triangular face (E)
+               [3,2,5]]
+               );}
+union() {     
+color("blue")
+translate([18.3,-17,0])
+rotate([0,0,-90])
+prism(3, 10, 10 * sqrt(3));
+
+color("blue")
+translate([18.3,20,0])
+rotate([0,0,-90])
+prism(3, 10, 10 * sqrt(3));
+
+breadboard(5, true);
+
+difference() {
+translate([grid_spacing*2, 0, 0])
+rotate([0,-60,0])
+breadboard(6, false);
+translate([0,0,-arm_width/2])
+cube([arm_width+10, arm_width+10, arm_width], center=true);
+}
 }

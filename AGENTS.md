@@ -12,6 +12,14 @@ else
     echo "libffi-dev is already installed."
 fi
 
+# 1a. Install NetworkManager (needed for Wi-Fi fallback)
+if ! dpkg -s network-manager >/dev/null 2>&1; then
+    echo "Installing network-manager..."
+    sudo apt-get install -y network-manager
+else
+    echo "network-manager is already installed."
+fi
+
 # 2. Install uv only if the 'uv' command is not found
 # We also check the default install location just in case it's installed but not in PATH
 if ! command -v uv >/dev/null 2>&1 && [ ! -f "$HOME/.cargo/bin/uv" ]; then

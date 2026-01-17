@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Wi-Fi Setup</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: #fff; padding: 20px; }
+        h1, h2 { text-align: center; }
+        .card { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .network-list { list-style: none; padding: 0; }
+        .network-item {
+            padding: 10px; border-bottom: 1px solid #444;
+            cursor: pointer; display: flex; justify-content: space-between;
+        }
+        .network-item:hover { background: #444; }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); align-items: center; justify-content: center;
+        }
+        .modal-content { background: #333; padding: 20px; border-radius: 8px; width: 80%; max-width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button {
+            width: 100%; padding: 10px; background: #007bff; color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+        }
+        button.cancel { background: #666; margin-top: 10px; }
+        #status-indicator { font-weight: bold; color: #0f0; }
+    </style>
+</head>
+<body>
+    <h1>Wi-Fi Setup</h1>
+
+    <div class="card">
+        <h2>Status</h2>
+        <p>State: <span id="status-text">Checking...</span></p>
+        <p>SSID: <span id="status-ssid">-</span></p>
+        <p>IP: <span id="status-ip">-</span></p>
+    </div>
+
+    <div class="card">
+        <h2>Available Networks</h2>
+        <button onclick="scanNetworks()">Rescan</button>
+        <ul id="network-list" class="network-list">
+            <li>Scanning...</li>
+        </ul>
+    </div>
+
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <h3>Connect to <span id="modal-ssid"></span></h3>
+            <input type="password" id="wifi-password" placeholder="Password">
+            <button onclick="connectWifi()">Connect</button>
+            <button class="cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedSsid = "";
+
+        async function updateStatus() {
+            try {
+                const res = await fetch('/api/wifi/status');
+                const data = await res.json();
+
+                document.getElementById('status-text').innerText =
+                    data.connected ? "Connected" : "Disconnected";
+                document.getElementById('status-ssid').innerText =
+                    (data.mode === 'hotspot' ? "HOTSPOT: " : "") + (data.ssid || "None");
+                document.getElementById('status-ip').innerText = data.ip || "-";
+
+                if(data.mode === 'hotspot') {
+                    document.getElementById('status-text').style.color = 'orange';
+                } else if (data.connected) {
+                    document.getElementById('status-text').style.color = '#0f0';
+                } else {
+                    document.getElementById('status-text').style.color = 'red';
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function scanNetworks() {
+            const list = document.getElementById('network-list');
+            list.innerHTML = '<li>Scanning...</li>';
+
+            try {
+                const res = await fetch('/api/wifi/scan');
+                const networks = await res.json();
+
+                list.innerHTML = '';
+                networks.forEach(n => {
+                    const li = document.createElement('li');
+                    li.className = 'network-item';
+                    li.innerHTML = `<span>${n.ssid}</span> <span>${n.signal}%</span>`;
+                    li.onclick = () => openModal(n.ssid);
+                    list.appendChild(li);
+                });
+            } catch(e) {
+                list.innerHTML = '<li>Error scanning</li>';
+            }
+        }
+
+        function openModal(ssid) {
+            selectedSsid = ssid;
+            document.getElementById('modal-ssid').innerText = ssid;
+            document.getElementById('wifi-password').value = "";
+            document.getElementById('password-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('password-modal').style.display = 'none';
+        }
+
+        async function connectWifi() {
+            const password = document.getElementById('wifi-password').value;
+            closeModal();
+            alert("Connecting... The robot may disconnect temporarily.");
+
+            try {
+                const res = await fetch('/api/wifi/connect', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ssid: selectedSsid, password: password})
+                });
+                const data = await res.json();
+                if(!data.success) {
+                    alert("Connection failed: " + data.message);
+                } else {
+                    // Poll for status update
+                    setTimeout(updateStatus, 5000);
+                }
+            } catch(e) {
+                alert("Error sending request");
+            }
+        }
+
+        // Init
+        updateStatus();
+        scanNetworks();
+        setInterval(updateStatus, 5000);
+    </script>
+</body>
+</html>

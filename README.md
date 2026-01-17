@@ -26,7 +26,24 @@ For hardware access on Raspberry Pi:
 sudo raspi-config nonint do_i2c 0
 ```
 
+**Wi-Fi Management:**
+The robot uses `nmcli` (NetworkManager) to manage connections. Ensure it is installed:
+```bash
+sudo apt install network-manager
+```
+
 Then run the script in [AGENTS.md](AGENTS.md).
+
+### Wi-Fi Fallback Mode
+If the robot cannot connect to a known Wi-Fi network on boot, it will create a Hotspot:
+* **SSID:** `RobotHotspot`
+* **Password:** None (Open)
+* **IP:** `10.42.0.1` (usually)
+
+Connect your phone to this hotspot, then visit:
+`http://10.42.0.1:5000/wifi`
+
+From there, you can scan for networks and configure the robot to connect to a new location.
 
 ### Installation
 

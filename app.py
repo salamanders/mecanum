@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from typing import TypedDict, Optional, Dict, Any
 
 from OpenSSL import crypto
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
 
 from motor_driver import MotorDriver, MotorSpeeds
+from wifi_manager import WifiManager
+from wifi_monitor import monitor_wifi_loop
 
 
 # --- TYPES & DATA CLASSES ---
@@ -108,6 +110,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 robot_state = RobotState()
 motors = MotorDriver()
+wifi = WifiManager()
 
 
 def send_status_update(target_sid: Optional[str] = None) -> None:
@@ -147,6 +150,40 @@ def controller() -> str:
 @app.route("/sensor")
 def sensor() -> str:
     return render_template("sensor.html")
+
+
+@app.route("/wifi")
+def wifi_page() -> str:
+    return render_template("wifi.html")
+
+
+@app.route("/api/wifi/scan")
+def api_wifi_scan():
+    """Returns list of available networks."""
+    networks = wifi.scan_networks()
+    return jsonify(
+        [{"ssid": n.ssid, "signal": n.signal, "security": n.security} for n in networks]
+    )
+
+
+@app.route("/api/wifi/connect", methods=["POST"])
+def api_wifi_connect():
+    """Connects to a specific network."""
+    data = request.json
+    ssid = data.get("ssid")
+    password = data.get("password")
+
+    if not ssid:
+        return jsonify({"success": False, "message": "SSID required"}), 400
+
+    success, msg = wifi.connect_to(ssid, password)
+    return jsonify({"success": success, "message": msg})
+
+
+@app.route("/api/wifi/status")
+def api_wifi_status():
+    """Returns current connection info."""
+    return jsonify(wifi.get_status())
 
 
 # --- WEBSOCKET LISTENERS ---
@@ -231,8 +268,11 @@ if __name__ == "__main__":
     # Ensure SSL certs exist (required for modern browser sensors)
     ensure_certificates()
 
-    # Start background task
+    # Start background tasks
     socketio.start_background_task(background_status_task)
+    # Start wifi monitor in background (waits 15s then checks connectivity)
+    # Pass socketio.sleep to prevent blocking the event loop
+    socketio.start_background_task(monitor_wifi_loop, sleep_func=socketio.sleep)
 
     # Host 0.0.0.0 makes it accessible on the LAN
     socketio.run(app, host="0.0.0.0", port=5000, certfile="cert.pem", keyfile="key.pem")

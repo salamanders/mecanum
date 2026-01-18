@@ -1,4 +1,4 @@
-from motor_driver import MotorDriver
+from motor_driver import MotorDriver, MotorSpeeds
 
 
 def prompt_user(message):
@@ -42,7 +42,7 @@ def main():
             )
 
             print(f"    -> Powering {mid} at 50% throttle...")
-            driver.drive(*drive_args)
+            driver.drive(MotorSpeeds(*drive_args))
 
             # 2. Verify voltage
             prompt_user(
@@ -57,7 +57,7 @@ def main():
 
             # 4. Stop
             print(f"    -> Stopping {mid}...")
-            driver.drive(0, 0, 0, 0)
+            driver.drive(MotorSpeeds(0, 0, 0, 0))
 
             prompt_user(f"Test for {mid} ({pos}) complete.")
 
@@ -72,7 +72,7 @@ def main():
     finally:
         # Ensure motors are stopped
         try:
-            driver.drive(0, 0, 0, 0)
+            driver.drive(MotorSpeeds(0, 0, 0, 0))
         except Exception:
             pass
         print("Motors stopped. Exiting.")

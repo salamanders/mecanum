@@ -570,3 +570,6 @@ __marimo__/
 
 cert.pem
 key.pem
+# Temporary download logs
+wget-log
+wget-log.*

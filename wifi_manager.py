@@ -6,14 +6,19 @@ from typing import List, Tuple
 
 @dataclass
 class WifiNetwork:
-    ssid: str
-    signal: int
-    security: str
+    """Represents a scanned Wi-Fi network's details."""
+
+    ssid: str  # Network name (SSID identifier)
+    signal: int  # Signal strength percentage (0-100)
+    security: str  # Encryption type (e.g., WPA2)
 
 
 class WifiManager:
+    """Handles network connections using NetworkManager CLI."""
+
     def __init__(self):
         self.nmcli_path = shutil.which("nmcli")
+        # Run in simulated mode if nmcli is missing
         self.is_mock = self.nmcli_path is None
         if self.is_mock:
             print("WifiManager: 'nmcli' not found. Running in MOCK mode.")
@@ -25,7 +30,7 @@ class WifiManager:
             }
 
     def _run_command(self, args: List[str]) -> Tuple[bool, str]:
-        """Runs an nmcli command and returns success/output."""
+        """Executes nmcli command via subprocess. Returns (success, output)."""
         if self.is_mock:
             return True, ""
 
@@ -39,7 +44,7 @@ class WifiManager:
             return False, str(e)
 
     def get_status(self) -> dict:
-        """Returns current connection status."""
+        """Retrieves current connection status, IP, and mode."""
         if self.is_mock:
             return {
                 "connected": self._mock_state["connected"],
@@ -92,7 +97,7 @@ class WifiManager:
         return state
 
     def scan_networks(self) -> List[WifiNetwork]:
-        """Scans for available networks."""
+        """Scans for available Wi-Fi networks in range."""
         if self.is_mock:
             return [
                 WifiNetwork("Home-WiFi", 80, "WPA2"),
@@ -150,7 +155,7 @@ class WifiManager:
         return networks
 
     def connect_to(self, ssid: str, password: str) -> Tuple[bool, str]:
-        """Connects to a network. Returns (Success, Message)."""
+        """Connects robot to a specific client Wi-Fi network."""
         if self.is_mock:
             self._mock_state["connected"] = True
             self._mock_state["ssid"] = ssid
@@ -171,9 +176,9 @@ class WifiManager:
 
     def ensure_hotspot(self) -> bool:
         """
-        Ensures the robot is accessible.
-        If connected to a client network, do nothing.
-        If disconnected, activate RobotHotspot.
+        Fallback mechanism to launch local Access Point.
+        If connected to client Wi-Fi, does nothing.
+        If offline, activates RobotHotspot so user can connect.
         """
         status = self.get_status()
         if status["connected"]:

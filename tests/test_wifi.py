@@ -1,14 +1,15 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import json
 import sys
 import os
 
 # Ensure we can import app
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app import app, wifi
 from wifi_manager import WifiNetwork
+
 
 class TestWifiEndpoints(unittest.TestCase):
     def setUp(self):
@@ -17,65 +18,70 @@ class TestWifiEndpoints(unittest.TestCase):
 
     def test_wifi_page(self):
         """Test the HTML page loads."""
-        response = self.app.get('/wifi')
+        response = self.app.get("/wifi")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Wi-Fi Setup', response.data)
+        self.assertIn(b"Wi-Fi Setup", response.data)
 
     def test_wifi_status_endpoint(self):
         """Test status endpoint structure."""
         # Mock the underlying wifi manager call
-        with patch.object(wifi, 'get_status') as mock_status:
+        with patch.object(wifi, "get_status") as mock_status:
             mock_status.return_value = {
                 "connected": True,
                 "ssid": "TestNet",
                 "ip": "1.2.3.4",
-                "mode": "client"
+                "mode": "client",
             }
 
-            response = self.app.get('/api/wifi/status')
+            response = self.app.get("/api/wifi/status")
             data = json.loads(response.data)
 
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(data['ssid'], "TestNet")
-            self.assertTrue(data['connected'])
+            self.assertEqual(data["ssid"], "TestNet")
+            self.assertTrue(data["connected"])
 
     def test_wifi_scan_endpoint(self):
         """Test scan endpoint returns list."""
-        with patch.object(wifi, 'scan_networks') as mock_scan:
+        with patch.object(wifi, "scan_networks") as mock_scan:
             mock_scan.return_value = [
                 WifiNetwork("NetA", 90, "WPA2"),
-                WifiNetwork("NetB", 50, "Open")
+                WifiNetwork("NetB", 50, "Open"),
             ]
 
-            response = self.app.get('/api/wifi/scan')
+            response = self.app.get("/api/wifi/scan")
             data = json.loads(response.data)
 
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data), 2)
-            self.assertEqual(data[0]['ssid'], "NetA")
+            self.assertEqual(data[0]["ssid"], "NetA")
 
     def test_wifi_connect_endpoint_success(self):
         """Test connection success."""
-        with patch.object(wifi, 'connect_to') as mock_connect:
+        with patch.object(wifi, "connect_to") as mock_connect:
             mock_connect.return_value = (True, "Connected!")
 
             payload = {"ssid": "MyNet", "password": "pass"}
-            response = self.app.post('/api/wifi/connect',
-                                   data=json.dumps(payload),
-                                   content_type='application/json')
+            response = self.app.post(
+                "/api/wifi/connect",
+                data=json.dumps(payload),
+                content_type="application/json",
+            )
             data = json.loads(response.data)
 
             self.assertEqual(response.status_code, 200)
-            self.assertTrue(data['success'])
+            self.assertTrue(data["success"])
             mock_connect.assert_called_with("MyNet", "pass")
 
     def test_wifi_connect_endpoint_missing_ssid(self):
         """Test connection fails without SSID."""
-        response = self.app.post('/api/wifi/connect',
-                               data=json.dumps({"password": "pass"}),
-                               content_type='application/json')
+        response = self.app.post(
+            "/api/wifi/connect",
+            data=json.dumps({"password": "pass"}),
+            content_type="application/json",
+        )
 
         self.assertEqual(response.status_code, 400)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

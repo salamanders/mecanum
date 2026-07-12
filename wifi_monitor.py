@@ -1,9 +1,14 @@
-import time
 import logging
+import time
+
 from wifi_manager import WifiManager
 
 
-def monitor_wifi_loop(check_interval: int = 30, boot_wait: int = 15, sleep_func=time.sleep):
+def monitor_wifi_loop(
+        check_interval: int = 30,  # Seconds between connection checks
+        boot_wait: int = 15,  # Delay before initial boot connection check
+        sleep_func=time.sleep,  # Non-blocking sleep function (e.g. SocketIO sleep)
+):
     """
     Background loop to ensure Wi-Fi connectivity.
 
@@ -17,10 +22,12 @@ def monitor_wifi_loop(check_interval: int = 30, boot_wait: int = 15, sleep_func=
     logging.basicConfig(level=logging.INFO)
 
     logger.info(f"WifiMonitor: Starting... waiting {boot_wait}s for auto-connect.")
+    # Allow initial boot phase for auto-connection
     sleep_func(boot_wait)
 
     while True:
         try:
+            # Query the manager for connection details
             status = wm.get_status()
 
             if status["connected"]:
@@ -31,13 +38,16 @@ def monitor_wifi_loop(check_interval: int = 30, boot_wait: int = 15, sleep_func=
                 logger.warning(
                     "WifiMonitor: Disconnected! Activating Hotspot fallback..."
                 )
+                # Fallback to local access point mode
                 wm.ensure_hotspot()
 
         except Exception as e:
             logger.error(f"WifiMonitor: Error checking status: {e}")
 
+        # Sleep before next connection check
         sleep_func(check_interval)
 
 
 if __name__ == "__main__":
+    # Script entrypoint for standalone monitoring
     monitor_wifi_loop()

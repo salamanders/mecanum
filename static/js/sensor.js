@@ -4,7 +4,7 @@ const disp = document.getElementById('val');
 const accelDisp = document.getElementById('accel');
 
 let currentHeading = 0;
-let currentAccel = { x: 0, y: 0, z: 0 };
+let currentAccel = {x: 0, y: 0, z: 0};
 let sensorsActive = false;
 
 // Prevent screen sleep
@@ -74,8 +74,8 @@ setInterval(() => {
 function requestPerms() {
     // @ts-ignore - DeviceOrientationEvent
     if (!window.DeviceOrientationEvent) {
-            updateStatus('DeviceOrientationEvent not supported', 'error');
-            return;
+        updateStatus('DeviceOrientationEvent not supported', 'error');
+        return;
     }
 
     console.debug('Requesting sensor permissions...');

@@ -46,7 +46,7 @@ class StatusData(TypedDict):
 
 
 def calculate_mecanum_speeds(
-    input_data: JoystickInput, heading_degrees: float
+        input_data: JoystickInput, heading_degrees: float
 ) -> MotorSpeeds:
     """
     Calculates the motor speeds for a mecanum wheel robot with field-centric control.
@@ -108,9 +108,20 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- GLOBAL STATE ---
 
+# Check and consume the force_mock.flag file once for both drivers
+flag_path = "force_mock.flag"
+force_mock = False
+if os.path.exists(flag_path):
+    try:
+        os.remove(flag_path)
+        force_mock = True
+        print("Forcing MOCK mode for this launch.")
+    except Exception as e:
+        print(f"Failed to delete force_mock.flag ({e}). Ignoring mock flag.")
+
 robot_state = RobotState()
-motors = MotorDriver()
-wifi = WifiManager()
+motors = MotorDriver(mock=force_mock)
+wifi = WifiManager(mock=force_mock)
 
 
 def send_status_update(target_sid: Optional[str] = None) -> None:
@@ -272,7 +283,11 @@ if __name__ == "__main__":
     socketio.start_background_task(background_status_task)
     # Start wifi monitor in background (waits 15s then checks connectivity)
     # Pass socketio.sleep to prevent blocking the event loop
-    socketio.start_background_task(monitor_wifi_loop, sleep_func=socketio.sleep)
+    socketio.start_background_task(
+        monitor_wifi_loop,
+        sleep_func=socketio.sleep,
+        wifi_manager=wifi,
+    )
 
     # Host 0.0.0.0 makes it accessible on the LAN
     socketio.run(app, host="0.0.0.0", port=5000, certfile="cert.pem", keyfile="key.pem")

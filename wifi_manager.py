@@ -16,18 +16,21 @@ class WifiNetwork:
 class WifiManager:
     """Handles network connections using NetworkManager CLI."""
 
-    def __init__(self):
+    def __init__(self, mock: bool = False):
         self.nmcli_path = shutil.which("nmcli")
-        # Run in simulated mode if nmcli is missing
-        self.is_mock = self.nmcli_path is None
+        self.is_mock = mock
         if self.is_mock:
-            print("WifiManager: 'nmcli' not found. Running in MOCK mode.")
+            print("WifiManager: Running in MOCK mode.")
             self._mock_state = {
                 "connected": False,
                 "ssid": None,
                 "ip": "127.0.0.1",
                 "mode": None,
             }
+            return
+
+        if self.nmcli_path is None:
+            raise RuntimeError("nmcli not found. Configure force_mock.flag to run in mock mode.")
 
     def _run_command(self, args: List[str]) -> Tuple[bool, str]:
         """Executes nmcli command via subprocess. Returns (success, output)."""

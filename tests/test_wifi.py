@@ -1,8 +1,8 @@
+import json
+import os
+import sys
 import unittest
 from unittest.mock import patch
-import json
-import sys
-import os
 
 # Ensure we can import app
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

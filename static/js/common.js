@@ -25,7 +25,7 @@ function updateStatus(msg, level = 'info') {
             statusDiv.style.color = 'orange';
             console.warn(msg);
         } else if (level === 'debug') {
-             console.debug(msg);
+            console.debug(msg);
         } else {
             statusDiv.style.color = 'lime';
             console.info(msg);

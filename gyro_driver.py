@@ -1,5 +1,5 @@
-import time
 import random
+import time
 from dataclasses import dataclass
 from typing import Optional
 
@@ -35,69 +35,59 @@ class GyroDriver:
     Falls back to Mock mode if hardware is missing.
     """
 
-    def __init__(self) -> None:
-        self.mock: bool = False
+    def __init__(self, mock: bool = False) -> None:
+        self.mock: bool = mock
         self.i2c = None
         self.address: Optional[int] = None
         self.offset_x: float = 0.0
         self.offset_y: float = 0.0
         self.offset_z: float = 0.0
 
+        if self.mock:
+            print("Gyro Driver: Running in MOCK mode.")
+            return
+
+        import board
+        import busio
+
+        # Initialize I2C
+        self.i2c = busio.I2C(board.SCL, board.SDA)
+
+        # Scan for device
+        while not self.i2c.try_lock():
+            pass
+
         try:
-            import board
-            import busio
+            addresses = self.i2c.scan()
+            print(f"I2C Scan found: {[hex(a) for a in addresses]}")
 
-            # Initialize I2C
-            self.i2c = busio.I2C(board.SCL, board.SDA)
+            if L3G4200D_ADDRESS_69 in addresses:
+                self.address = L3G4200D_ADDRESS_69
+            elif L3G4200D_ADDRESS_68 in addresses:
+                self.address = L3G4200D_ADDRESS_68
 
-            # Scan for device
-            while not self.i2c.try_lock():
-                pass
+            if self.address is None:
+                raise OSError("L3G4200D not found on I2C bus.")
 
-            try:
-                addresses = self.i2c.scan()
-                print(f"I2C Scan found: {[hex(a) for a in addresses]}")
-
-                if L3G4200D_ADDRESS_69 in addresses:
-                    self.address = L3G4200D_ADDRESS_69
-                elif L3G4200D_ADDRESS_68 in addresses:
-                    self.address = L3G4200D_ADDRESS_68
-
-                if self.address is None:
-                    raise OSError("L3G4200D not found on I2C bus.")
-
-                # Verify ID
-                # Write to WHO_AM_I register (0x0F)
-                # We need to write the register address, then read back
-                self._write_register(
-                    L3G4200D_WHO_AM_I, []
-                )  # Just setting pointer? No, busio.I2C.writeto_then_readfrom
-
-                # Check WHO_AM_I
-                chip_id = self._read_register(L3G4200D_WHO_AM_I)
-                if chip_id != L3G4200D_ID:
-                    print(
-                        f"Warning: Unexpected Chip ID: {hex(chip_id)} (Expected {hex(L3G4200D_ID)})"
-                    )
-
-                # Initialize Configuration
-                self._initialize_chip()
-                print(f"L3G4200D initialized at address {hex(self.address)}")
-
-            finally:
-                self.i2c.unlock()
-
-        except (ImportError, NotImplementedError) as e:
-            print(
-                f"Gyro Driver: Hardware dependencies missing ({e}). Falling back to MOCK mode."
+            # Verify ID
+            # Write to WHO_AM_I register (0x0F)
+            self._write_register(
+                L3G4200D_WHO_AM_I, []
             )
-            self.mock = True
-        except (OSError, ValueError, RuntimeError) as e:
-            print(f"Gyro Driver: Hardware error ({e}). Falling back to MOCK mode.")
-            self.mock = True
-        except Exception as e:
-            print(f"Gyro Driver: Unexpected error ({e}). Falling back to MOCK mode.")
-            self.mock = True
+
+            # Check WHO_AM_I
+            chip_id = self._read_register(L3G4200D_WHO_AM_I)
+            if chip_id != L3G4200D_ID:
+                print(
+                    f"Warning: Unexpected Chip ID: {hex(chip_id)} (Expected {hex(L3G4200D_ID)})"
+                )
+
+            # Initialize Configuration
+            self._initialize_chip()
+            print(f"L3G4200D initialized at address {hex(self.address)}")
+
+        finally:
+            self.i2c.unlock()
 
     def _write_register(self, register: int, value: int) -> None:
         """Writes a byte to a specific register. Assumes I2C lock is held."""

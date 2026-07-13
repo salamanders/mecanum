@@ -1,3 +1,5 @@
+import os
+
 from motor_driver import MotorDriver, MotorSpeeds
 
 
@@ -8,7 +10,19 @@ def prompt_user(message):
 
 def main():
     print("Initializing Motor Driver...")
-    driver = MotorDriver()
+
+    # Check and consume force_mock.flag
+    flag_path = "force_mock.flag"
+    force_mock = False
+    if os.path.exists(flag_path):
+        try:
+            os.remove(flag_path)
+            force_mock = True
+            print("Forcing MOCK mode for this check.")
+        except Exception as e:
+            print(f"Failed to delete force_mock.flag ({e}). Ignoring mock flag.")
+
+    driver = MotorDriver(mock=force_mock)
 
     # Motor configurations: (ID, Position, Drive Args)
     # Drive Args format: (fl, fr, bl, br)

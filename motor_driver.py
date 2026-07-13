@@ -33,32 +33,19 @@ class MotorDriver:
     Automatically falls back to a Mock implementation if hardware is missing.
     """
 
-    def __init__(self) -> None:
-        self.mock: bool = False
+    def __init__(self, mock: bool = False) -> None:
+        self.mock: bool = mock
         self.kit: Optional[MotorKitProtocol] = None
 
-        try:
-            from adafruit_motorkit import MotorKit
+        if self.mock:
+            print("MotorDriver: Running in MOCK mode.")
+            return
 
-            # The Adafruit Bonnet usually lives at address 0x60
-            self.kit = MotorKit()
-            print("Adafruit Motor Bonnet Connected!")
+        from adafruit_motorkit import MotorKit
 
-        except ImportError as e:
-            print(f"adafruit-circuitpython-motorkit import failed: {e}")
-            print("Falling back to MOCK mode.")
-            self.mock = True
-
-        except (ValueError, OSError) as e:
-            # ValueError often happens if I2C is not enabled or device not found
-            print(f"ERROR: Motor Bonnet hardware error: {e}")
-            print("Falling back to MOCK mode.")
-            self.mock = True
-
-        except Exception as e:
-            print(f"ERROR: Unexpected initialization error: {e}")
-            print("Falling back to MOCK mode.")
-            self.mock = True
+        # The Adafruit Bonnet usually lives at address 0x60
+        self.kit = MotorKit()
+        print("Adafruit Motor Bonnet Connected!")
 
     def drive(self, speeds: MotorSpeeds) -> None:
         """

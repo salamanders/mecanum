@@ -1,5 +1,7 @@
-import time
+import os
 import sys
+import time
+
 from gyro_driver import GyroDriver
 
 
@@ -28,7 +30,19 @@ def main():
 
     # Step 2: Initialization
     print("\nInitializing Gyro Driver...")
-    gyro = GyroDriver()
+
+    # Check and consume force_mock.flag
+    flag_path = "force_mock.flag"
+    force_mock = False
+    if os.path.exists(flag_path):
+        try:
+            os.remove(flag_path)
+            force_mock = True
+            print("Forcing MOCK mode for this check.")
+        except Exception as e:
+            print(f"Failed to delete force_mock.flag ({e}). Ignoring mock flag.")
+
+    gyro = GyroDriver(mock=force_mock)
 
     if gyro.mock:
         print("\nWARNING: Driver is in MOCK mode.")

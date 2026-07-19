@@ -1,7 +1,10 @@
+import logging
 import shutil
 import subprocess
 from dataclasses import dataclass
 from typing import List, Tuple
+
+logger = logging.getLogger("wifi_manager")
 
 
 @dataclass
@@ -20,7 +23,7 @@ class WifiManager:
         self.nmcli_path = shutil.which("nmcli")
         self.is_mock = mock
         if self.is_mock:
-            print("WifiManager: Running in MOCK mode.")
+            logger.info("WifiManager: Running in MOCK mode.")
             self._mock_state = {
                 "connected": False,
                 "ssid": None,
@@ -43,7 +46,7 @@ class WifiManager:
             result = subprocess.run(cmd, capture_output=True, text=True, check=False)
             return (result.returncode == 0), result.stdout.strip()
         except Exception as e:
-            print(f"WifiManager Error: {e}")
+            logger.error(f"WifiManager Error: {e}")
             return False, str(e)
 
     def get_status(self) -> dict:
@@ -159,11 +162,13 @@ class WifiManager:
 
     def connect_to(self, ssid: str, password: str) -> Tuple[bool, str]:
         """Connects robot to a specific client Wi-Fi network."""
+        logger.info(f"Attempting to connect to SSID: {ssid}")
         if self.is_mock:
             self._mock_state["connected"] = True
             self._mock_state["ssid"] = ssid
             self._mock_state["mode"] = "client"
             self._mock_state["ip"] = "192.168.1.150"
+            logger.info(f"Connection successful (Mock Mode) to SSID: {ssid}")
             return True, "Mock connection successful"
 
         # nmcli dev wifi connect <SSID> password <PASSWORD>
@@ -175,6 +180,10 @@ class WifiManager:
             cmd.extend(["password", password])
 
         success, output = self._run_command(cmd)
+        if success:
+            logger.info(f"Successfully connected to SSID: {ssid}")
+        else:
+            logger.error(f"Failed to connect to SSID: {ssid}. Output: {output}")
         return success, output
 
     def ensure_hotspot(self) -> bool:
@@ -192,10 +201,10 @@ class WifiManager:
             self._mock_state["ssid"] = "RobotHotspot"
             self._mock_state["connected"] = True
             self._mock_state["ip"] = "10.42.0.1"
-            print("Mock: Activated Hotspot")
+            logger.warning("Mock: Activated Hotspot")
             return True
 
-        print("WifiManager: Disconnected. Activating Hotspot...")
+        logger.warning("WifiManager: Disconnected. Activating Hotspot...")
 
         # Check if connection profile exists
         # nmcli con show RobotHotspot
@@ -205,7 +214,7 @@ class WifiManager:
             # Create it
             # nmcli con add type wifi ifname wlan0 con-name RobotHotspot autoconnect yes ssid RobotHotspot
             # nmcli con modify RobotHotspot 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
-            print("WifiManager: Creating RobotHotspot profile...")
+            logger.info("WifiManager: Creating RobotHotspot profile...")
             self._run_command(
                 [
                     "con",
@@ -239,8 +248,8 @@ class WifiManager:
         # Activate it
         success, output = self._run_command(["con", "up", "RobotHotspot"])
         if success:
-            print("WifiManager: Hotspot activated.")
+            logger.warning("WifiManager: Hotspot activated.")
         else:
-            print(f"WifiManager: Failed to activate hotspot: {output}")
+            logger.error(f"WifiManager: Failed to activate hotspot: {output}")
 
         return success

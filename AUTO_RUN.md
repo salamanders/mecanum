@@ -1,5 +1,5 @@
-The "modern simple way" (and the most robust) is to create a **Systemd Service**.
-It creates one text file that tells the Pi: *"Wait for WiFi, then run this command, and restart it if it crashes."*
+The "modern simple way" (and the most robust) is to create a **Systemd Service**. It creates one text file that tells
+the Pi: *"Wait for WiFi, then run this command, and restart it if it crashes."*
 
 ### Step 1: Get your details
 

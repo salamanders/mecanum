@@ -27,22 +27,25 @@ def monitor_wifi_loop(
 
     flag_path = "force_hotspot.flag"
     force_hotspot = False
+    log_file = "wifi.log"
 
     # 1. Verify we can write to the log output. If not, SKIP the flag to avoid lockout.
     log_writable = False
     try:
-        with open("hotspot.log", "a") as lf:
+        with open(log_file, "a") as lf:
             lf.write(f"\n--- Boot check: {time.asctime()} ---\n")
         log_writable = True
     except Exception as e:
-        print(f"WifiMonitor: hotspot.log is not writable ({e}). Skipping force-hotspot checks to prevent lockout.")
+        print(f"WifiMonitor: {log_file} is not writable ({e}). Skipping force-hotspot checks to prevent lockout.")
 
     if log_writable:
         # Configure file logging since we verified it works
         try:
-            file_handler = logging.FileHandler("hotspot.log")
-            file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-            logger.addHandler(file_handler)
+            root_logger = logging.getLogger()
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+            root_logger.addHandler(file_handler)
+            root_logger.setLevel(logging.INFO)
         except Exception as e:
             logger.error(f"WifiMonitor: Failed to add FileHandler: {e}")
 
@@ -73,7 +76,7 @@ def monitor_wifi_loop(
             status = wm.get_status()
 
             if status["connected"]:
-                logger.debug(
+                logger.info(
                     f"WifiMonitor: Connected to {status['ssid']} ({status['mode']}) at {status['ip']}"
                 )
             else:

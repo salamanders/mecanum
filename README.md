@@ -86,7 +86,7 @@ From there, you can scan for networks and configure the robot to connect to a ne
 flowchart TD
     Start([System Boot]) --> CheckFlag{force_hotspot.flag exists?}
     
-    CheckFlag -- Yes --> CheckLog{hotspot.log writable?}
+    CheckFlag -- Yes --> CheckLog{wifi.log writable?}
     CheckLog -- No --> PrintErr["Log error to stderr"] --> BootWait["Wait boot_wait (15s)"]
     CheckLog -- Yes --> ConsumeFlag{Can delete flag file?}
     
@@ -112,13 +112,13 @@ To test hotspot mode safely without locking yourself out:
 1. Create an empty file named `force_hotspot.flag` in the project root directory (e.g., `/home/pi/mecanum`):
     * **Permissions Note:** The Linux user running the robot service (defined as `User` in `robot.service`, typically
       `pi`) must have write/delete permissions in the project root directory to delete the flag file and create
-      `hotspot.log`.
+      `wifi.log`.
    ```bash
    touch force_hotspot.flag
    ```
 2. Reboot the robot. The background monitor (running as the service user) will detect the flag, immediately delete it to
    prevent lockout loops, and boot straight into hotspot mode.
-3. Activity is logged to `hotspot.log` in the project root directory.
+3. Activity is logged to `wifi.log` in the project root directory.
 4. On the subsequent reboot, the robot automatically returns to client mode and rejoins your home Wi-Fi.
 
 ### Installation
@@ -146,8 +146,8 @@ To run the robot automatically on boot, see [AUTO_RUN.md](AUTO_RUN.md).
 
 ### Development & Mock Mode
 
-By default, the robot will fail loudly (raise exceptions) if hardware is missing, disconnected, or if system utilities (
-like `nmcli`) are not found. This prevents the robot from silently entering "Mock Mode" on the real Pi due to loose
+By default, the robot will fail loudly (raise exceptions) if hardware is missing, disconnected, or if system utilities
+(like `nmcli`) are not found. This prevents the robot from silently entering "Mock Mode" on the real Pi due to loose
 hardware connections or errors.
 
 To run the project locally on your laptop (or in development/testing mode):

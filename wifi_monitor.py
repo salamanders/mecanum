@@ -11,6 +11,7 @@ def monitor_wifi_loop(
         boot_wait: int = 15,  # Delay before initial boot connection check
         sleep_func=time.sleep,  # Non-blocking sleep function (e.g. SocketIO sleep)
         wifi_manager: Optional[WifiManager] = None,  # Shared WifiManager instance
+        app_port: int = 5000,  # Port of the Flask app
 ):
     """
     Background loop to ensure Wi-Fi connectivity.
@@ -76,15 +77,24 @@ def monitor_wifi_loop(
             status = wm.get_status()
 
             if status["connected"]:
+                url_path = "/controller" if status["mode"] == "client" else "/wifi"
                 logger.info(
-                    f"WifiMonitor: Connected to {status['ssid']} ({status['mode']}) at {status['ip']}"
+                    f"WifiMonitor: Connected to {status['ssid']} ({status['mode']}) at {status['ip']}. "
+                    f"Access UI at: https://{status['ip']}:{app_port}{url_path}"
                 )
             else:
                 logger.warning(
                     "WifiMonitor: Disconnected! Activating Hotspot fallback..."
                 )
                 # Fallback to local access point mode
-                wm.ensure_hotspot()
+                if wm.ensure_hotspot():
+                    status = wm.get_status()
+                    logger.warning(
+                        f"WifiMonitor: Hotspot activated ({status['ssid']}) at {status['ip']}. "
+                        f"Access Setup UI at: https://{status['ip'] or '10.42.0.1'}:{app_port}/wifi"
+                    )
+                else:
+                    logger.error("WifiMonitor: Failed to activate Hotspot fallback.")
 
         except Exception as e:
             logger.error(f"WifiMonitor: Error checking status: {e}")

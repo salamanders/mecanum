@@ -59,14 +59,18 @@ class MotorDriver:
             return
 
         # The library expects values between -1.0 and 1.0
+        def _clamp(val: float) -> float:
+            return max(-1.0, min(1.0, val))
+
         # M1 = Front Left
-        self.kit.motor1.throttle = speeds.front_left
+        self.kit.motor1.throttle = _clamp(speeds.front_left)
 
         # M2 = Front Right
-        self.kit.motor2.throttle = speeds.front_right
+        self.kit.motor2.throttle = _clamp(speeds.front_right)
 
         # M3 = Back Left
-        self.kit.motor3.throttle = speeds.back_left
+        self.kit.motor3.throttle = _clamp(speeds.back_left)
 
         # M4 = Back Right
-        self.kit.motor4.throttle = speeds.back_right
+        self.kit.motor4.throttle = _clamp(speeds.back_right)
+

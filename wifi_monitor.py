@@ -43,9 +43,14 @@ def monitor_wifi_loop(
         # Configure file logging since we verified it works
         try:
             root_logger = logging.getLogger()
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-            root_logger.addHandler(file_handler)
+            has_file_handler = any(
+                isinstance(h, logging.FileHandler) and h.baseFilename.endswith(log_file)
+                for h in root_logger.handlers
+            )
+            if not has_file_handler:
+                file_handler = logging.FileHandler(log_file)
+                file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+                root_logger.addHandler(file_handler)
             root_logger.setLevel(logging.INFO)
         except Exception as e:
             logger.error(f"WifiMonitor: Failed to add FileHandler: {e}")

@@ -87,15 +87,24 @@ def calculate_mecanum_speeds(
 
 def get_local_ip() -> str:
     """Detects the local IP address of the machine."""
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s = None
     try:
-        # doesn't even have to be reachable
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # doesn't even have to be reachable if default route exists
         s.connect(("8.8.8.8", 1))
         ip_address = s.getsockname()[0]
     except Exception:
         ip_address = "127.0.0.1"
+        try:
+            if "wifi" in globals() and wifi:
+                status_ip = wifi.get_status().get("ip")
+                if status_ip:
+                    ip_address = status_ip
+        except Exception:
+            pass
     finally:
-        s.close()
+        if s:
+            s.close()
     return str(ip_address)
 
 

@@ -54,8 +54,8 @@ class GyroDriver:
         self.i2c = busio.I2C(board.SCL, board.SDA)
 
         # Scan for device
-        while not self.i2c.try_lock():
-            pass
+        self._acquire_lock()
+
 
         try:
             addresses = self.i2c.scan()
@@ -68,12 +68,6 @@ class GyroDriver:
 
             if self.address is None:
                 raise OSError("L3G4200D not found on I2C bus.")
-
-            # Verify ID
-            # Write to WHO_AM_I register (0x0F)
-            self._write_register(
-                L3G4200D_WHO_AM_I, []
-            )
 
             # Check WHO_AM_I
             chip_id = self._read_register(L3G4200D_WHO_AM_I)
@@ -88,6 +82,18 @@ class GyroDriver:
 
         finally:
             self.i2c.unlock()
+
+    def _acquire_lock(self, timeout_ms: int = 100) -> None:
+        """Acquires I2C bus lock with sleep and timeout to prevent CPU spin/hang."""
+        if not self.i2c:
+            return
+        attempts = 0
+        max_attempts = max(1, timeout_ms)
+        while not self.i2c.try_lock():
+            time.sleep(0.001)
+            attempts += 1
+            if attempts >= max_attempts:
+                raise OSError("I2C lock timeout in GyroDriver")
 
     def _write_register(self, register: int, value: int) -> None:
         """Writes a byte to a specific register. Assumes I2C lock is held."""
@@ -192,8 +198,7 @@ class GyroDriver:
             )
 
         # Acquire lock correctly
-        while not self.i2c.try_lock():
-            pass
+        self._acquire_lock()
 
         try:
             # Read 6 bytes: XL, XH, YL, YH, ZL, ZH

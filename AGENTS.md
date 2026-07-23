@@ -12,12 +12,12 @@ else
     echo "libffi-dev is already installed."
 fi
 
-# 1a. Install NetworkManager (needed for Wi-Fi fallback)
-if ! dpkg -s network-manager >/dev/null 2>&1; then
-    echo "Installing network-manager..."
-    sudo apt-get install -y network-manager
+# 1a. Install NetworkManager & dnsmasq-base (needed for Wi-Fi AP fallback DHCP)
+if ! dpkg -s network-manager dnsmasq-base >/dev/null 2>&1; then
+    echo "Installing network-manager and dnsmasq-base..."
+    sudo apt-get install -y network-manager dnsmasq-base
 else
-    echo "network-manager is already installed."
+    echo "network-manager and dnsmasq-base are already installed."
 fi
 
 # 2. Install uv only if the 'uv' command is not found
@@ -38,3 +38,6 @@ uv self update
 echo "Installing project dependencies..."
 uv sync
 ```
+
+> **Note:** Tests and hardware/network scripts (e.g. `nmcli` or hardware drivers) are intended to run directly on the Raspberry Pi robot device, not on the host laptop.
+

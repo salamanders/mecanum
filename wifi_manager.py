@@ -49,6 +49,18 @@ class WifiManager:
             logger.error(f"WifiManager Error: {e}")
             return False, str(e)
 
+    def _get_wifi_interface(self) -> str:
+        """Finds the primary Wi-Fi device name (e.g. wlan0)."""
+        if self.is_mock:
+            return "wlan0"
+        success, output = self._run_command(["-t", "-f", "DEVICE,TYPE", "dev"])
+        if success and output:
+            for line in output.split("\n"):
+                parts = line.split(":")
+                if len(parts) >= 2 and parts[1] == "wifi":
+                    return parts[0]
+        return "wlan0"
+
     def get_status(self) -> dict:
         """Retrieves current connection status, IP, and mode."""
         if self.is_mock:
@@ -211,10 +223,8 @@ class WifiManager:
         exists, _ = self._run_command(["con", "show", "RobotHotspot"])
 
         if not exists:
-            # Create it
-            # nmcli con add type wifi ifname wlan0 con-name RobotHotspot autoconnect yes ssid RobotHotspot
-            # nmcli con modify RobotHotspot 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
-            logger.info("WifiManager: Creating RobotHotspot profile...")
+            iface = self._get_wifi_interface()
+            logger.info(f"WifiManager: Creating RobotHotspot profile on interface {iface}...")
             self._run_command(
                 [
                     "con",
@@ -222,7 +232,7 @@ class WifiManager:
                     "type",
                     "wifi",
                     "ifname",
-                    "wlan0",
+                    iface,
                     "con-name",
                     "RobotHotspot",
                     "autoconnect",

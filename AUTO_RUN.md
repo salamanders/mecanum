@@ -27,8 +27,8 @@ with your username if it's different.
 ```ini
 [Unit]
 Description=Robot Web Controller
-After=network-online.target
-Wants=network-online.target
+After=network.target
+Wants=network.target
 
 [Service]
 # Update to your username from "whoami"
@@ -49,7 +49,7 @@ WantedBy=multi-user.target
 
 **Why this is better than the old way:**
 
-* `After=network-online.target`: It politely waits until the WiFi is actually connected before launching.
+* `After=network.target`: Starts as soon as network services are up without waiting 90s for an online internet connection (allowing the app to launch its own hotspot fallback when offline).
 * `Restart=always`: If the code crashes (or you kill it), it pops right back up after 5 seconds.
 
 ### Step 3: Enable it

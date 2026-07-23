@@ -82,6 +82,20 @@ class TestWifiEndpoints(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_get_local_ip_fallback(self):
+        """Test that get_local_ip falls back to wifi status IP when socket fails (offline mode)."""
+        from app import get_local_ip
+        import socket
+        with patch.object(socket.socket, "connect", side_effect=OSError("Network unreachable")):
+            with patch.object(wifi, "get_status", return_value={"ip": "10.42.0.1"}):
+                self.assertEqual(get_local_ip(), "10.42.0.1")
+
+    def test_get_wifi_interface_detection(self):
+        """Test parsing of nmcli device list for wifi interface."""
+        with patch.object(wifi, "is_mock", False):
+            with patch.object(wifi, "_run_command", return_value=(True, "eth0:ethernet\nwlan1:wifi")):
+                self.assertEqual(wifi._get_wifi_interface(), "wlan1")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -57,7 +57,7 @@ class WifiManager:
         if success and output:
             for line in output.split("\n"):
                 parts = line.split(":")
-                if len(parts) >= 2 and "wireless" in parts[1]:
+                if len(parts) >= 2 and ("wireless" in parts[1] or parts[1] == "wifi"):
                     state["ssid"] = parts[0]
                     state["connected"] = True
                     state["mode"] = (
@@ -66,10 +66,13 @@ class WifiManager:
                     break
 
         if state["connected"]:
-            s_ok, s_out = self._run_command(["-t", "-f", "IP4.ADDRESS", "dev", "show"])
+            iface = self._get_wifi_interface()
+            s_ok, s_out = self._run_command(
+                ["-t", "-f", "IP4.ADDRESS", "dev", "show", iface]
+            )
             if s_ok and s_out:
                 for line in s_out.split("\n"):
-                    if "127.0.0.1" not in line and ":" in line:
+                    if ":" in line:
                         ip_part = line.split(":", 1)[1]
                         state["ip"] = ip_part.split("/")[0]
                         break
@@ -138,11 +141,14 @@ class WifiManager:
         Returns (success, message).
         """
         status = self.get_status()
+        if status["connected"] and status["mode"] == "hotspot":
+            return True, "RobotHotspot is already active."
         if status["connected"] and not force:
             return True, "Already connected to Wi-Fi."
 
         logger.warning("WifiManager: Activating Hotspot...")
         iface = self._get_wifi_interface()
+
 
         # Check if connection profile exists
         exists, _ = self._run_command(["con", "show", "RobotHotspot"])

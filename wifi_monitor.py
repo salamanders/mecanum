@@ -70,7 +70,8 @@ def monitor_wifi_loop(
 
     if force_hotspot:
         logger.info("WifiMonitor: Skipping boot wait and forcing hotspot activation immediately...")
-        wm.ensure_hotspot()
+        wm.ensure_hotspot(force=True)
+
     else:
         logger.info(f"WifiMonitor: Starting... waiting {boot_wait}s for auto-connect.")
         # Allow initial boot phase for auto-connection

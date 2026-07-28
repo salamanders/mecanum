@@ -105,21 +105,17 @@ flowchart TD
     ForceAP --> LoopSleep
 ```
 
-#### Testing Hotspot Mode (One-Time Force)
+#### Forcing Hotspot Mode
 
-To test hotspot mode safely without locking yourself out:
+There are two easy ways to force the robot into Hotspot mode:
 
-1. Create an empty file named `force_hotspot.flag` in the project root directory (e.g., `/home/pi/mecanum`):
-    * **Permissions Note:** The Linux user running the robot service (defined as `User` in `robot.service`, typically
-      `pi`) must have write/delete permissions in the project root directory to delete the flag file and create
-      `wifi.log`.
+1. **Web UI Button (Instant Switch):** Visit `https://<ip>:5000/wifi` while connected and click the **"Switch to Hotspot"** button. The robot instantly switches to `RobotHotspot` mode without requiring a reboot, and writes `force_hotspot.flag` for one-time boot persistence.
+2. **Command / Flag File (One-Time Boot Force):** Touch `force_hotspot.flag` in the project root directory:
    ```bash
    touch force_hotspot.flag
    ```
-2. Reboot the robot. The background monitor (running as the service user) will detect the flag, immediately delete it to
-   prevent lockout loops, and boot straight into hotspot mode.
-3. Activity is logged to `wifi.log` in the project root directory.
-4. On the subsequent reboot, the robot automatically returns to client mode and rejoins your home Wi-Fi.
+   On the next boot, `wifi_monitor.py` will detect the flag, immediately delete it to prevent lockout loops, and boot straight into hotspot mode. On subsequent reboots, normal Wi-Fi auto-connect resumes.
+   * **Permissions Note:** The Linux user running the robot service (defined as `User` in `robot.service`, typically `pi`) must have write/delete permissions in the project root directory to delete the flag file and log to `wifi.log`.
 
 ### Installation
 
@@ -180,11 +176,8 @@ make test
 
 * **Power**: Set USB PD Trigger to 9V.
 * **Layout**: Ensure Mecanum wheels form an 'X' pattern from the top.
-* **Wiring**:
-    * M1 (Front Left) → Motor Terminal 1
-    * M2 (Front Right) → Motor Terminal 2
-    * M3 (Back Left) → Motor Terminal 3
-    * M4 (Back Right) → Motor Terminal 4
+* **Wiring**: Connect your 4 motor channels to terminals M1-M4. Run `python3 wiring_check.py` to interactively calibrate motor channel positions and spin directions without physically rewiring.
+
 
 ## Files
 

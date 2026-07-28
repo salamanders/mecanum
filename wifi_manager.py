@@ -198,14 +198,14 @@ class WifiManager:
             logger.error(f"Failed to connect to SSID: {ssid}. Output: {output}")
         return success, output
 
-    def ensure_hotspot(self) -> bool:
+    def ensure_hotspot(self, force: bool = False) -> bool:
         """
         Fallback mechanism to launch local Access Point.
-        If connected to client Wi-Fi, does nothing.
-        If offline, activates RobotHotspot so user can connect.
+        If connected to client Wi-Fi and not forced, does nothing.
+        If offline or force=True, activates RobotHotspot so user can connect.
         """
         status = self.get_status()
-        if status["connected"]:
+        if status["connected"] and not force:
             return True
 
         if self.is_mock:
@@ -216,7 +216,7 @@ class WifiManager:
             logger.warning("Mock: Activated Hotspot")
             return True
 
-        logger.warning("WifiManager: Disconnected. Activating Hotspot...")
+        logger.warning("WifiManager: Activating Hotspot...")
 
         # Check if connection profile exists
         # nmcli con show RobotHotspot

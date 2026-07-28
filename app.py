@@ -206,6 +206,22 @@ def api_wifi_status():
     return jsonify(wifi.get_status())
 
 
+@app.route("/api/wifi/hotspot", methods=["POST"])
+def api_wifi_hotspot():
+    """Forces robot into Access Point / Hotspot mode."""
+    flag_path = "force_hotspot.flag"
+    try:
+        with open(flag_path, "w") as f:
+            f.write("1\n")
+        print(f"app: Created {flag_path} for boot persistence.")
+    except Exception as e:
+        print(f"app: Failed to write {flag_path} ({e})")
+
+    success = wifi.ensure_hotspot(force=True)
+    return jsonify({"success": success, "message": "Switching to RobotHotspot..."})
+
+
+
 # --- WEBSOCKET LISTENERS ---
 
 

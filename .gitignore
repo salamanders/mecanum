@@ -570,6 +570,9 @@ __marimo__/
 
 cert.pem
 key.pem
+motor_config.json
+force_mock.flag
 # Temporary download logs
 wget-log
 wget-log.*
+

@@ -93,4 +93,18 @@ already in use" errors).
 When you change your code (like tweaking speed), do this:
 
 1. Edit `app.py`.
-2. Run `sudo systemctl restart robot` to load the changes.
+2. Run `sudo systemctl restart robot.service` to load the changes.
+
+### How to View App Logs
+
+To view output logs and verify `motor_config.json` loading or check for errors:
+
+* **View recent logs:**
+  ```bash
+  sudo journalctl -u robot.service -n 50 --no-pager
+  ```
+
+* **Follow live log output in real time:**
+  ```bash
+  sudo journalctl -u robot.service -f
+  ```

@@ -125,6 +125,8 @@ def main():
             )
             print(f"  Channel M{ch_str}: {info['label']:<12} | Direction: {dir_str}")
         print("==================================================")
+        print("\nTo apply this configuration to a background app instance, run:")
+        print("  sudo systemctl restart robot.service\n")
 
     except KeyboardInterrupt:
         print("\n\nMapping cancelled by user! Stopping all motors...")

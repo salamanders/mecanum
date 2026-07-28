@@ -74,8 +74,9 @@ Then run the script in [AGENTS.md](AGENTS.md).
 If the robot cannot connect to a known Wi-Fi network on boot, it will create a Hotspot:
 
 * **SSID:** `RobotHotspot`
-* **Password:** None (Open)
+* **Password:** `password`
 * **IP:** `10.42.0.1` (usually)
+
 
 Connect your phone to this hotspot, then visit:
 `http://10.42.0.1:5000/wifi`

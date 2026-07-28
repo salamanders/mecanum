@@ -29,12 +29,18 @@ class WifiManager:
             return False, "nmcli not installed on this system"
 
         try:
-            cmd = [self.nmcli_path] + args
+            sudo_path = shutil.which("sudo")
+            cmd = (
+                [sudo_path, self.nmcli_path] + args
+                if sudo_path
+                else [self.nmcli_path] + args
+            )
             result = subprocess.run(cmd, capture_output=True, text=True, check=False)
             return (result.returncode == 0), result.stdout.strip()
         except Exception as e:
             logger.error(f"WifiManager Error: {e}")
             return False, str(e)
+
 
     def _get_wifi_interface(self) -> str:
         """Finds the primary Wi-Fi device name (e.g. wlan0)."""
@@ -167,31 +173,34 @@ class WifiManager:
                     iface,
                     "con-name",
                     "RobotHotspot",
-                    "autoconnect",
-                    "yes",
+                    "mode",
+                    "ap",
                     "ssid",
                     "RobotHotspot",
-                ]
-            )
-            self._run_command(
-                [
-                    "con",
-                    "modify",
-                    "RobotHotspot",
-                    "802-11-wireless.mode",
-                    "ap",
-                    "802-11-wireless.band",
-                    "bg",
                     "ipv4.method",
                     "shared",
                 ]
             )
 
+        # Set WPA2 PSK password to "password"
+        self._run_command(
+            [
+                "con",
+                "modify",
+                "RobotHotspot",
+                "wifi-sec.key-mgmt",
+                "wpa-psk",
+                "wifi-sec.psk",
+                "password",
+            ]
+        )
+
         # Disconnect current active device if forcing hotspot while connected
         if status["connected"]:
             self._run_command(["device", "disconnect", iface])
 
-        success, output = self._run_command(["con", "up", "RobotHotspot"])
+        success, output = self._run_command(["con", "up", "RobotHotspot", "ifname", iface])
+
         if success:
             logger.warning("WifiManager: Hotspot activated.")
             return True, "RobotHotspot activated successfully."

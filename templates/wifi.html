@@ -208,22 +208,39 @@
     }
 
     async function switchToHotspot() {
-        if (!confirm("Are you sure you want to switch the robot to RobotHotspot mode? Connect your device to 'RobotHotspot' afterwards.")) {
+        const confirmMsg = 
+            "Are you sure you want to switch the robot to Hotspot mode?\n\n" +
+            "  • SSID: RobotHotspot\n" +
+            "  • Password: password\n\n" +
+            "Your phone/laptop will need to connect to 'RobotHotspot'.";
+
+        if (!confirm(confirmMsg)) {
             return;
         }
         try {
             const res = await fetch('/api/wifi/hotspot', { method: 'POST' });
             const data = await res.json();
             if (data.success) {
-                alert("Switching to RobotHotspot! Please connect your phone/laptop to the 'RobotHotspot' Wi-Fi network.");
+                alert(
+                    "Switching to Hotspot!\n\n" +
+                    "Connect your device to:\n" +
+                    "  • SSID: RobotHotspot\n" +
+                    "  • Password: password"
+                );
                 setTimeout(updateStatus, 3000);
             } else {
                 alert("Failed to switch to Hotspot: " + (data.message || "Unknown error"));
             }
         } catch (e) {
-            alert("Switching to RobotHotspot... Please connect your phone/laptop to the 'RobotHotspot' Wi-Fi network.");
+            alert(
+                "Switching to Hotspot!\n\n" +
+                "Connect your device to:\n" +
+                "  • SSID: RobotHotspot\n" +
+                "  • Password: password"
+            );
         }
     }
+
 
     // Init
     updateStatus();

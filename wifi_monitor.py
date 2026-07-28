@@ -92,7 +92,8 @@ def monitor_wifi_loop(
                     "WifiMonitor: Disconnected! Activating Hotspot fallback..."
                 )
                 # Fallback to local access point mode
-                if wm.ensure_hotspot():
+                hs_ok, _ = wm.ensure_hotspot()
+                if hs_ok:
                     status = wm.get_status()
                     logger.warning(
                         f"WifiMonitor: Hotspot activated ({status['ssid']}) at {status['ip']}. "

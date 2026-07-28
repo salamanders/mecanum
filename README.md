@@ -142,21 +142,19 @@ To run the robot automatically on boot, see [AUTO_RUN.md](AUTO_RUN.md).
 
 ### Development & Mock Mode
 
-By default, the robot will fail loudly (raise exceptions) if hardware is missing, disconnected, or if system utilities
-(like `nmcli`) are not found. This prevents the robot from silently entering "Mock Mode" on the real Pi due to loose
-hardware connections or errors.
+By default, motor control supports mock execution via `force_mock.flag` or command line flags when hardware is disconnected.
 
-To run the project locally on your laptop (or in development/testing mode):
+For Wi-Fi management, `WifiManager` operates directly via `nmcli` without internal fake mock state branches. If `nmcli` is not installed (e.g. running locally on a non-Linux development laptop), `WifiManager` returns clean error status responses without crashing or corrupting state.
+
+To force mock mode for motor drivers during local development:
 
 1. Create a `force_mock.flag` file in the project root:
    ```bash
    touch force_mock.flag
    ```
 2. Run the application (`make run` or `python3 app.py`).
-3. The server will detect the flag, immediately delete it to prevent lockout/unintentional mocks, and boot into **Mock
-   Mode** for that session.
-4. In Mock Mode, motor commands are printed to the console and Wi-Fi commands are simulated, without accessing actual
-   hardware/interfaces.
+3. The server detects the flag, deletes it, and runs motor drivers in mock mode for that session.
+
 
 To lint the code:
 

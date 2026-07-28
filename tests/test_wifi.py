@@ -92,9 +92,9 @@ class TestWifiEndpoints(unittest.TestCase):
 
     def test_get_wifi_interface_detection(self):
         """Test parsing of nmcli device list for wifi interface."""
-        with patch.object(wifi, "is_mock", False):
-            with patch.object(wifi, "_run_command", return_value=(True, "eth0:ethernet\nwlan1:wifi")):
-                self.assertEqual(wifi._get_wifi_interface(), "wlan1")
+        with patch.object(wifi, "_run_command", return_value=(True, "eth0:ethernet\nwlan1:wifi")):
+            self.assertEqual(wifi._get_wifi_interface(), "wlan1")
+
 
 
 if __name__ == "__main__":

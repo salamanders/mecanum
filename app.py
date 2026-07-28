@@ -217,8 +217,9 @@ def api_wifi_hotspot():
     except Exception as e:
         print(f"app: Failed to write {flag_path} ({e})")
 
-    success = wifi.ensure_hotspot(force=True)
-    return jsonify({"success": success, "message": "Switching to RobotHotspot..."})
+    success, msg = wifi.ensure_hotspot(force=True)
+    return jsonify({"success": success, "message": msg})
+
 
 
 
